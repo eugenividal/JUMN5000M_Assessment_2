@@ -1,5 +1,5 @@
 ---
-output: html_document
+output: pdf_document
 ---
 
 ## UNDERSTANDING DATA AND THEIR ENVIRONMENT: REPORT ASSESSMENT
@@ -35,6 +35,10 @@ hist(stores$`Size (sq ft)`, main = "", xlab = "Store size (sqft)", breaks = b)
 
 ## 3. Joining the data
 
+The next step in the proces is to link data sets together in order to facilitate the pre-process and the identification of the key factors.
+
+
+First store-level data are link onto training dataset
 
 ```{r}
 # join store-level data onto training dataset (so we know size)
