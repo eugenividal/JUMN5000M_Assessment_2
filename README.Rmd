@@ -2,10 +2,13 @@
 output: word_document
 ---
 
+## UNDERSTANDING DATA AND THEIR ENVIRONMENT: REPORT ASSESSMENT
+
 This report explains the approach taken to forecast sales across stores.
 It is reproduble based on code available at ...
 
 The first stage is to load in the data. We will use the tidyverse package and load it with the `library()` function:
+
 
 ```{r, message=FALSE}
 library(tidyverse)
