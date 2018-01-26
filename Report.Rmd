@@ -2,12 +2,14 @@
 output: pdf_document
 ---
 
-## UNDERSTANDING DATA AND THEIR ENVIRONMENT: REPORT ASSESSMENT
+## UNDERSTANDING DATA AND ITS ENVIRONMENT: REPORT ASSESSMENT
 
 ## 1. Introduction
 
 This report explains the approach taken to forecast sales across stores.
-It is reproduble based on code available at ...
+It is reproduble based on code available at https://github.com/eugenividal/Understanding-data-report
+
+The task is to estimate sales for the departments of each store based on the historical training data.
 
 The first stage is to load in the data. We will use the tidyverse package and load it with the `library()` function:
 
@@ -18,8 +20,6 @@ library(tidyverse)
 source("code/load-data.R")
 ```
 
-The task is to estimate sales for the Departments of each store based on the historical training data.
-
 We can check that these files have been loaded into the R envionment with the following command:
 
 ```{r}
@@ -28,6 +28,8 @@ ls()
 
 ## 2. Reviewing and describing the data
 
+The data is described on a histogram.
+
 ```{r, out.width="50%"}
 b = seq(from = 0, to = 300000, by = 50000)
 hist(stores$`Size (sq ft)`, main = "", xlab = "Store size (sqft)", breaks = b)
@@ -35,7 +37,7 @@ hist(stores$`Size (sq ft)`, main = "", xlab = "Store size (sqft)", breaks = b)
 
 ## 3. Joining the data
 
-The next step in the proces is to link data sets together in order to facilitate the pre-process and the identification of the key factors.
+Data sets are linked together in order to facilitate the task of pre-processing and identifying the key factors.
 
 
 First store-level data are link onto training dataset
