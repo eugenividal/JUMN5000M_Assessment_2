@@ -4,6 +4,8 @@ output: word_document
 
 ## UNDERSTANDING DATA AND THEIR ENVIRONMENT: REPORT ASSESSMENT
 
+##Introduction
+
 This report explains the approach taken to forecast sales across stores.
 It is reproduble based on code available at ...
 
@@ -24,7 +26,7 @@ We can check that these files have been loaded into the R envionment with the fo
 ls()
 ```
 
-## Describe data
+## Review and describe the data
 
 ```{r, out.width="50%"}
 b = seq(from = 0, to = 300000, by = 50000)
@@ -34,15 +36,17 @@ hist(stores$`Size (sq ft)`, main = "", xlab = "Store size (sqft)", breaks = b)
 ## Joining the data
 
 
-
 ```{r}
 # join store-level data onto training dataset (so we know size)
 train_joined = inner_join(train, y = stores)
 # would use rename() function to rename columns if needed (not needed)
 train_joined = inner_join(train_joined, y = features)
 ```
+## Pre-process the data
 
-## Create model to estimate store sales
+## Identify the key factors
+
+## Create the predictive model
 
 There are many packages and approach for forecasting.
 We could use the `lm()` function to do a linear regression, for example.
