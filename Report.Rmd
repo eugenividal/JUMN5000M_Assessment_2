@@ -35,12 +35,13 @@ b = seq(from = 0, to = 300000, by = 50000)
 hist(stores$`Size (sq ft)`, main = "", xlab = "Store size (sqft)", breaks = b)
 ```
 
-## 3. Joining the data
+### 3. Joining the data
 
-Data sets are linked together in order to facilitate the task of pre-processing and identifying the key factors.
+Data sets are combined together into a unified view in order to facilitate the tasks of pre-processing and identifying the key factors.
 
+No difficulties of Data Integration were found.
 
-First store-level data are link onto training dataset
+The three data sets (stores, train and features) are linked in this order using the 'store' variable as ID.
 
 ```{r}
 # join store-level data onto training dataset (so we know size)
@@ -48,9 +49,12 @@ train_joined = inner_join(train, y = stores)
 # would use rename() function to rename columns if needed (not needed)
 train_joined = inner_join(train_joined, y = features)
 ```
+
 ## 4. Pre-processing the data
 
+
 ## 5. Identifying the key factors
+
 
 ## 6. Creating the predictive model
 
