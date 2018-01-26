@@ -1,5 +1,7 @@
 ---
-output: pdf_document
+output:
+  word_document: default
+  pdf_document: default
 ---
 
 ## UNDERSTANDING DATA AND ITS ENVIRONMENT: REPORT ASSESSMENT
@@ -68,7 +70,7 @@ m1 = lm(Weekly_Sales ~ IsHoliday + Fuel_Price, data = train_joined)
 summary(m1)
 # Plot regression line
 plot(Weekly_Sales ~ IsHoliday + Fuel_Price, data = train_joined)
-abline(m2, col="red")
+abline(m1, col="red")
 # predicted_sales = predict(m1, train_joined)
 # plot(train_joined$Weekly_Sales, predicted_sales)
 ```
