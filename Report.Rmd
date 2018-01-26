@@ -4,7 +4,7 @@ output: word_document
 
 ## UNDERSTANDING DATA AND THEIR ENVIRONMENT: REPORT ASSESSMENT
 
-##Introduction
+## Introduction
 
 This report explains the approach taken to forecast sales across stores.
 It is reproduble based on code available at ...
