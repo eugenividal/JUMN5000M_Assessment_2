@@ -87,3 +87,10 @@ summary (m2)
 plot(Weekly_Sales ~ Temperature, data = train_joined)
 abline(m2, col="red")
 ```
+ 
+ 
+ ```{r}
+m3 = lm(Weekly_Sales ~ Dept + Store + Type + Promotion1 + Promotion2 + Promotion3 + Promotion4 + Promotion5 + CPI + Unemployment, data = train_joined)
+summary (m3)
+```
+ 
