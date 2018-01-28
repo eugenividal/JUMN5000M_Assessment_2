@@ -4,14 +4,14 @@ output:
   word_document: default
 ---
 
-## UNDERSTANDING DATA AND ITS ENVIRONMENT: REPORT ASSESSMENT
+# UNDERSTANDING DATA AND ITS ENVIRONMENT: REPORT ASSESSMENT
 
 ## 1. Introduction
-Forecasting sales is a big challenge for retailers around the world (reference needed).
+Forecasting or making predictions of sales are fundamental and very challenging for retailers around the world (reference needed). 
 
-This report explains the approach taken to forecast sales for a specific case for a nationwide retailer in the U.S.  
+This report explains the approach taken to forecast sales for a nationwide retailer in the U.S based on historical sales data for the departments of 45 stores. 
 
-The prediction will be based on historical sales data for the departments of 45 stores located in different areas of the U.S. An additional difficulty in the forecasting is the consideration of the effects of promotional activities on sales given the fact that part of the promotion related data is absent from historical records. 
+The consideration of the effects of promotional activities is an additional difficulty in the analysis given the fact that part of the promotion related data is absent from historical records. 
 
 All task has been carried out using R. The report is reproducible based on code available at https://github.com/eugenividal/Understanding-data-report.
 
@@ -29,13 +29,14 @@ library(tidyverse)
 source("code/load-data.R")
 ```
 
+
 We can check that these files have been loaded with the following command:
 
 ```{r}
 ls()
 ```
 
-The available data sets with each of its features are the following:
+Four data sets have been provided about the company. These data sets have information about the stores, features... Each of the data sets and its features are explained below:
 
 •	stores.csv
 
@@ -73,7 +74,7 @@ b = seq(from = 0, to = 300000, by = 50000)
 hist(stores$`Size (sq ft)`, main = "", xlab = "Store size (sqft)", breaks = b)
 ```
 
-### 3. Joining the data
+## 3. Data joining
 
 Data sets are combined together into a unified view in order to facilitate the tasks of pre-processing and identifying the key factors.
 
@@ -88,8 +89,13 @@ train_joined = inner_join(train, y = stores)
 train_joined = inner_join(train_joined, y = features)
 ```
 
-## 4. Pre-processing the data
+The result is a data frame that contains 421570 observations.
 
+## 4. Data re-processing
+
+In this step we will carry out some techniques to arrange the data in a way that makes the analysis easier.
+
+We will clean, prepare new data variables...
 
 ## 5. Identifying the key factors
 
