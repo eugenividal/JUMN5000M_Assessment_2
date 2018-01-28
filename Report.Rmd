@@ -65,7 +65,7 @@ Four data sets have been provided about the company. These data sets have inform
 
 •	test.csv
 
-This file is identical to train.csv, except you need to predict the weekly sales for each triplet of store, department, and date from 02/11/2012 to 26/07/2013.
+The validation dataset have the same fields as the train.csv, except we need to predict the weekly sales for each triplet of store, department, and date from 02/11/2012 to 26/07/2013.
 
 To describe the data we will draw a histogram.
 
@@ -74,13 +74,11 @@ b = seq(from = 0, to = 300000, by = 50000)
 hist(stores$`Size (sq ft)`, main = "", xlab = "Store size (sqft)", breaks = b)
 ```
 
-## 3. Data joining
+## 3. Data pre-processing
 
-Data sets are combined together into a unified view in order to facilitate the tasks of pre-processing and identifying the key factors.
+In this step we will carry out some "techniques"" to arrange the data in a way that makes the analysis easier and to produce a better model.
 
-No difficulties of Data Integration were found.
-
-The three data sets (stores, train and features) are linked in this order using the 'store' variable as ID.
+First of all, we will join the three data sets (stores, train and features) by Store which is the common column.No difficulties of Data Integration were found.
 
 ```{r}
 # join store-level data onto training dataset (so we know size)
@@ -89,18 +87,20 @@ train_joined = inner_join(train, y = stores)
 train_joined = inner_join(train_joined, y = features)
 ```
 
-The result is a data frame that contains 421570 observations.
+The result is a data frame with all the features that contains 421570 observations.
 
-## 4. Data re-processing
+Secondly, we will clean the data.
 
-In this step we will carry out some techniques to arrange the data in a way that makes the analysis easier.
+Thirdly, we will generate new features: 1) Include a Week Number of the year (code needed); 2) Add a return column (code needed).
 
-We will clean, prepare new data variables...
+Finally, we will reduce the data set. After performing this procedure we have x observations which makes our data more manageable for further analysis.
 
-## 5. Identifying the key factors
+And this is the way the data set frame looks once pre-processed (code is needed).
 
 
-## 6. Creating the predictive model
+## 4. Identifying the key factors
+
+Graphs to see the correlation between the different variables
 
 There are many packages and approach for forecasting.
 We could use the `lm()` function to do a linear regression, for example.
@@ -111,11 +111,11 @@ Here we use the xgboost package
 m1 = lm(Weekly_Sales ~ IsHoliday + Fuel_Price, data = train_joined)
 summary(m1)
 # Plot regression line
-plot(Weekly_Sales ~ IsHoliday + Fuel_Price, data = train_joined)
-abline(m1, col="red")
-# predicted_sales = predict(m1, train_joined)
-# plot(train_joined$Weekly_Sales, predicted_sales)
+ggplot(train_joined,aes(x= IsHoliday, y= Weekly_Sales)) + geom_point(aes(color=train_joined$IsHoliday)) + geom_smooth()
 ```
+
+ggplot(A_stores,aes(x=CPI,y=Weekly_Sales)) + geom_point(aes(color=A_stores$IsHoliday)) + geom_smooth()#Sales vary depending on the weeknum we are in
+
 Other option would be to use the ISLR package 
 
 ```{r}
@@ -126,13 +126,30 @@ library("ISLR")
 m2 = lm(Weekly_Sales ~ Temperature, data = train_joined)
 summary (m2)
 # Plot regression line
+
+ggplot(train_joined,aes(x= Temperature, y= Weekly_Sales)) + geom_point(aes(color=train_joined$Temperature)) + geom_smooth()
+
 plot(Weekly_Sales ~ Temperature, data = train_joined)
 abline(m2, col="red")
 ```
  
  
- ```{r}
+```{r}
 m3 = lm(Weekly_Sales ~ Dept + Store + Type + Promotion1 + Promotion2 + Promotion3 + Promotion4 + Promotion5 + CPI + Unemployment, data = train_joined)
 summary (m3)
+
 ```
+
+There is no clear correlation between the varibles previously graphed. BUt there is correlation between...
+
+Correlation matrix between all of our numerical features?
+
+## 5. Creating the predictive model
+
+Linear model to find a specific value for Weekly Sales that we want to predict?
+
+## 6. Model test
+
+
+
 ## 7. Conclusions
