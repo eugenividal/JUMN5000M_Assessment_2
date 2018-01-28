@@ -1,7 +1,7 @@
 ---
 output:
-  word_document: default
   pdf_document: default
+  word_document: default
 ---
 
 ## UNDERSTANDING DATA AND ITS ENVIRONMENT: REPORT ASSESSMENT
@@ -38,10 +38,13 @@ ls()
 The available data sets with each of its features are the following:
 
 •	stores.csv
+
 - Store: the anonymised store number
 - Type: store type, A: supercentre, B: superstore, C: supermarket
 - Size : store size (in square feet)
+
 •	features.csv
+
 - Store: the anonymised store number
 - Date:	the week with the dated Friday
 - Temperature: average temperature in the region
@@ -50,13 +53,17 @@ The available data sets with each of its features are the following:
 - CPI: the consumer price index
 - Unemployment: the unemployment rate
 - IsHoliday: whether the week is a special holiday week
+
 •	train.csv
+
 - Store: the anonymised store number
 - Department: the anonymised department number
 - Date: the week with the dated Friday
 - Weekly_Sales: sales for the given department in the given store
 - IsHoliday: whether the week is a special holiday week
+
 •	test.csv
+
 This file is identical to train.csv, except you need to predict the weekly sales for each triplet of store, department, and date from 02/11/2012 to 26/07/2013.
 
 To describe the data we will draw a histogram.
