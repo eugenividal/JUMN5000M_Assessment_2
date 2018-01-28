@@ -7,13 +7,20 @@ output:
 ## UNDERSTANDING DATA AND ITS ENVIRONMENT: REPORT ASSESSMENT
 
 ## 1. Introduction
+Forecasting sales is a big challenge for retailers around the world (reference needed).
 
-This report explains the approach taken to forecast sales across stores.
-It is reproduble based on code available at https://github.com/eugenividal/Understanding-data-report
+This report explains the approach taken to forecast sales for a specific case for a nationwide retailer in the U.S.  
 
-The task is to estimate sales for the departments of each store based on the historical training data.
+The prediction will be based on historical sales data for the departments of 45 stores located in different areas of the U.S. An additional difficulty in the forecasting is the consideration of the effects of promotional activities on sales given the fact that part of the promotion related data is absent from historical records. 
 
-The first stage is to load in the data. We will use the tidyverse package and load it with the `library()` function:
+All task has been carried out using R. The report is reproducible based on code available at https://github.com/eugenividal/Understanding-data-report.
+
+The whole process is described in the sections below.
+
+
+## 2. Data description
+
+The first stage before describing the data is to load it into the R environment. To to that, we will use the tidyverse package and load it with the `library()`function:
 
 
 ```{r, message=FALSE}
@@ -22,15 +29,37 @@ library(tidyverse)
 source("code/load-data.R")
 ```
 
-We can check that these files have been loaded into the R envionment with the following command:
+We can check that these files have been loaded with the following command:
 
 ```{r}
 ls()
 ```
 
-## 2. Reviewing and describing the data
+The available data sets with each of its features are the following:
 
-The data is described on a histogram.
+•	stores.csv
+- Store: the anonymised store number
+- Type: store type, A: supercentre, B: superstore, C: supermarket
+- Size : store size (in square feet)
+•	features.csv
+- Store: the anonymised store number
+- Date:	the week with the dated Friday
+- Temperature: average temperature in the region
+- Fuel_Price: cost of fuel in the region
+- Promotions:	anonymised data related to promotions, mainly price reductions that the retailer is running. Promotion data is only available after Nov. 2011, and is not available for all stores all the time. Any missing value is marked with an NA.
+- CPI: the consumer price index
+- Unemployment: the unemployment rate
+- IsHoliday: whether the week is a special holiday week
+•	train.csv
+- Store: the anonymised store number
+- Department: the anonymised department number
+- Date: the week with the dated Friday
+- Weekly_Sales: sales for the given department in the given store
+- IsHoliday: whether the week is a special holiday week
+•	test.csv
+This file is identical to train.csv, except you need to predict the weekly sales for each triplet of store, department, and date from 02/11/2012 to 26/07/2013.
+
+To describe the data we will draw a histogram.
 
 ```{r, out.width="50%"}
 b = seq(from = 0, to = 300000, by = 50000)
