@@ -4,7 +4,7 @@ output:
   word_document: default
 ---
 
-# UNDERSTANDING DATA AND ITS ENVIRONMENT: REPORT ASSESSMENT
+UNDERSTANDING DATA AND ITS ENVIRONMENT: REPORT ASSESSMENT
 
 ## 1. Introduction
 Forecasting or making predictions of sales are fundamental and very challenging for retailers around the world (reference needed). 
@@ -22,13 +22,11 @@ The whole process is described in the sections below.
 
 The first stage before describing the data is to load it into the R environment. To to that, we will use the tidyverse package and load it with the `library()`function:
 
-
 ```{r, message=FALSE}
 library(tidyverse)
 # load data
 source("code/load-data.R")
 ```
-
 
 We can check that these files have been loaded with the following command:
 
@@ -67,14 +65,7 @@ Four data sets have been provided about the company. These data sets have inform
 
 The validation dataset have the same fields as the train.csv, except we need to predict the weekly sales for each triplet of store, department, and date from 02/11/2012 to 26/07/2013.
 
-To describe the data we will draw a histogram.
-
-```{r, out.width="50%"}
-b = seq(from = 0, to = 300000, by = 50000)
-hist(stores$`Size (sq ft)`, main = "", xlab = "Store size (sqft)", breaks = b)
-```
-
-## 3. Data pre-processing
+## 3. Data preparation
 
 In this step we will carry out some "techniques"" to arrange the data in a way that makes the analysis easier and to produce a better model.
 
@@ -97,7 +88,6 @@ Finally, we will reduce the data set. After performing this procedure we have x 
 
 And this is the way the data set frame looks once pre-processed (code is needed).
 
-
 ## 4. Identifying the key factors
 
 Graphs to see the correlation between the different variables
@@ -106,33 +96,34 @@ There are many packages and approach for forecasting.
 We could use the `lm()` function to do a linear regression, for example.
 Here we use the xgboost package
 
-```{r}
-# install.packages("xgboost")
-m1 = lm(Weekly_Sales ~ IsHoliday + Fuel_Price, data = train_joined)
-summary(m1)
-# Plot regression line
-ggplot(train_joined,aes(x= IsHoliday, y= Weekly_Sales)) + geom_point(aes(color=train_joined$IsHoliday)) + geom_smooth()
+install.packages("Hmisc")
+
+```{R}
+# Plot weekly sales vs CPI
+ggplot(train_joined,aes(x= CPI, y= Weekly_Sales)) + geom_point(aes(color=train_joined$Type)) +stat_summary(fun.data=mean_cl_normal) + 
+  geom_smooth(method='lm')
 ```
 
-ggplot(A_stores,aes(x=CPI,y=Weekly_Sales)) + geom_point(aes(color=A_stores$IsHoliday)) + geom_smooth()#Sales vary depending on the weeknum we are in
 
-Other option would be to use the ISLR package 
+
 
 ```{r}
-# library("ISLR")
-# install.packages("ISLR")
-library("MASS")
-library("ISLR")
-m2 = lm(Weekly_Sales ~ Temperature, data = train_joined)
-summary (m2)
+# Plot weekly sales vs IsHoliday
+ggplot(train_joined,aes(x= Unemployment, y= Weekly_Sales)) + geom_point(aes(color=train_joined$Type))+stat_summary(fun.data=mean_cl_normal) + 
+  geom_smooth(method='lm')
+```
+
+```{R}
 # Plot regression line
-
-ggplot(train_joined,aes(x= Temperature, y= Weekly_Sales)) + geom_point(aes(color=train_joined$Temperature)) + geom_smooth()
-
-plot(Weekly_Sales ~ Temperature, data = train_joined)
-abline(m2, col="red")
+ggplot(train_joined,aes(x= Temperature, y= Weekly_Sales)) + geom_point(aes(color=train_joined$Type)) + geom_smooth()
 ```
  
+There is no clear correlation between the varibles previously graphed. BUt there is correlation between...
+
+Correlation matrix between all of our numerical features?
+
+
+## 5. Creating the predictive model
  
 ```{r}
 m3 = lm(Weekly_Sales ~ Dept + Store + Type + Promotion1 + Promotion2 + Promotion3 + Promotion4 + Promotion5 + CPI + Unemployment, data = train_joined)
@@ -140,15 +131,10 @@ summary (m3)
 
 ```
 
-There is no clear correlation between the varibles previously graphed. BUt there is correlation between...
-
-Correlation matrix between all of our numerical features?
-
-## 5. Creating the predictive model
 
 Linear model to find a specific value for Weekly Sales that we want to predict?
 
-## 6. Model test
+## 6. Evaluation of forecasting accuracy 
 
 
 
