@@ -108,13 +108,13 @@ ggplot(train_joined,aes(x= CPI, y= Weekly_Sales)) + geom_point(aes(color=train_j
 
 
 ```{r}
-# Plot weekly sales vs IsHoliday
+# Plot weekly sales vs Unemployment
 ggplot(train_joined,aes(x= Unemployment, y= Weekly_Sales)) + geom_point(aes(color=train_joined$Type))+stat_summary(fun.data=mean_cl_normal) + 
   geom_smooth(method='lm')
 ```
 
 ```{R}
-# Plot regression line
+# Plot weekly sales vs Temperature
 ggplot(train_joined,aes(x= Temperature, y= Weekly_Sales)) + geom_point(aes(color=train_joined$Type)) + geom_smooth()
 ```
  
@@ -130,7 +130,6 @@ m3 = lm(Weekly_Sales ~ Dept + Store + Type + Promotion1 + Promotion2 + Promotion
 summary (m3)
 
 ```
-
 
 Linear model to find a specific value for Weekly Sales that we want to predict?
 
