@@ -3,12 +3,12 @@ title: "Understanding Data and its Environment: Report assessment"
 author: Eugeni Vidal
 date: February 1, 2018
 output:
+  pdf_document: default
   html_document:
     toc: true
     toc_depth: 2
     toc_float: true
     df_print: paged
-  pdf_document: default
   word_document: default
 ---
 
@@ -22,7 +22,6 @@ The consideration of the effects of promotional activities is an additional diff
 All task has been carried out using R. The report is reproducible based on code available at https://github.com/eugenividal/Understanding-data-report.
 
 The whole process is described in the sections below.
-
 
 ## 2. Data description
 
@@ -146,3 +145,4 @@ Linear model to find a specific value for Weekly Sales that we want to predict?
 table(features$Date)
 
 ## 7. Conclusions
+
