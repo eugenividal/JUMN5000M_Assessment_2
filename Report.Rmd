@@ -1,5 +1,7 @@
 ---
 output:
+  html_document:
+    df_print: paged
   pdf_document: default
   word_document: default
 ---
@@ -97,6 +99,8 @@ We could use the `lm()` function to do a linear regression, for example.
 Here we use the xgboost package
 
 install.packages("Hmisc")
+
+?geom_smooth
 
 ```{R}
 # Plot weekly sales vs CPI
