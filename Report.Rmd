@@ -1,12 +1,18 @@
 ---
+title: "Understanding Data and its Environment: Report assessment"
+author: Eugeni Vidal
+date: February 1, 2018
 output:
   html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
     df_print: paged
   pdf_document: default
   word_document: default
 ---
 
-UNDERSTANDING DATA AND ITS ENVIRONMENT: REPORT ASSESSMENT
+install.packages("citr")
 
 ## 1. Introduction
 Forecasting or making predictions of sales are fundamental and very challenging for retailers around the world (reference needed). 
@@ -139,6 +145,6 @@ Linear model to find a specific value for Weekly Sales that we want to predict?
 
 ## 6. Evaluation of forecasting accuracy 
 
-
+table(features$Date)
 
 ## 7. Conclusions
