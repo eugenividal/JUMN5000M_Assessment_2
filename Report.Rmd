@@ -12,8 +12,6 @@ output:
   word_document: default
 ---
 
-install.packages("citr")
-
 ## 1. Introduction
 Forecasting or making predictions of sales are fundamental and very challenging for retailers around the world (reference needed). 
 
