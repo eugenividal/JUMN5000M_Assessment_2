@@ -3,12 +3,12 @@ title: "Understanding Data and its Environment: Report assessment"
 author: Eugeni Vidal
 date: February 1, 2018
 output:
-  pdf_document: default
   html_document:
     toc: true
     toc_depth: 2
     toc_float: true
     df_print: paged
+  pdf_document: default
   word_document: default
 ---
 
