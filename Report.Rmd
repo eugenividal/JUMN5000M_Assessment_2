@@ -3,13 +3,13 @@ title: "Understanding Data and its Environment: Report assessment"
 author: Eugeni Vidal
 date: February 1, 2018
 output:
+  word_document: default
   html_document:
     toc: true
     toc_depth: 2
     toc_float: true
     df_print: paged
   pdf_document: default
-  word_document: default
 ---
 
 ## 1. Introduction
@@ -72,18 +72,26 @@ The validation dataset have the same fields as the train.csv, except we need to 
 
 ## 3. Data preparation
 
-In this step we will carry out some "techniques"" to arrange the data in a way that makes the analysis easier and to produce a better model.
+In this step we will carry out some "techniques" to arrange the data in a way that makes the analysis easier and to produce a better model.
 
-First of all, we will join the three data sets (stores, train and features) by Store which is the common column.No difficulties of Data Integration were found.
+### 3.1. Data join
+
+First of all, we will join the three data sets (stores, train and features). This will allow us to make the analysis simpler and more straightforward. The data will be linked using the attributes in common. Store, to link stores with train dataset; and Store, Date and IsHoliday to link the first dataset joined and features dataset.
+
+To performance the join we will use DPLYR package and the join will be a full_join () type, because we don't want to lose any data at this stage.
+
+No missing or duplicate key values were detected.
 
 ```{r}
-# join store-level data onto training dataset (so we know size)
-train_joined = inner_join(train, y = stores)
-# would use rename() function to rename columns if needed (not needed)
-train_joined = inner_join(train_joined, y = features)
+# join store-level data onto training dataset (so we know size and type)
+train_joined = full_join(train, y= stores)
+# Join train_joined onto features dataset (so we know the ret of variables)
+train_joined = full_join(train_joined, y= features)
 ```
 
-The result is a data frame with all the features that contains 421570 observations.
+The result is a data frame with all the features that contains 423325 observations. Why there are 1,755 more observations?
+
+### 3.2. Data cleaning
 
 Secondly, we will clean the data.
 
@@ -110,8 +118,6 @@ install.packages("Hmisc")
 ggplot(train_joined,aes(x= CPI, y= Weekly_Sales)) + geom_point(aes(color=train_joined$Type)) +stat_summary(fun.data=mean_cl_normal) + 
   geom_smooth(method='lm')
 ```
-
-
 
 
 ```{r}
@@ -145,4 +151,14 @@ Linear model to find a specific value for Weekly Sales that we want to predict?
 table(features$Date)
 
 ## 7. Conclusions
+
+
+```{r}
+# join store-level data onto training dataset (so we know size and type).
+train_joined1 = left_join (train, y = stores)
+
+# join train_joined1 onto features dataset (so we know the rest of variables). 
+train_joined2 = left_join (train_joined1, y = features)
+
+```
 
