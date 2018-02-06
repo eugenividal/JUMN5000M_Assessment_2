@@ -3,29 +3,31 @@ title: "Understanding Data and its Environment: Report assessment"
 author: Eugeni Vidal
 date: February 1, 2018
 output:
-  word_document: default
   html_document:
     toc: true
     toc_depth: 2
     toc_float: true
     df_print: paged
+  slidy_presentation:
+  word_document: default
   pdf_document: default
+bibliography: PhD/library.bib
 ---
 
-## 1. Introduction
-Forecasting or making predictions of sales are fundamental and very challenging for retailers around the world (reference needed). 
+# 1. Introduction
+Forecasting or making predictions of sales are fundamental and very challenging for retailers around the world [@Aldred2013] (reference needed). 
 
 This report explains the approach taken to forecast sales for a nationwide retailer in the U.S based on historical sales data for the departments of 45 stores. 
 
 The consideration of the effects of promotional activities is an additional difficulty in the analysis given the fact that part of the promotion related data is absent from historical records. 
 
-All task has been carried out using R. The report is reproducible based on code available at https://github.com/eugenividal/Understanding-data-report.
+All task has been carried out using *R*. The report is reproducible based on code available at https://github.com/eugenividal/Understanding-data-report.
 
 The whole process is described in the sections below.
 
-## 2. Data description
+# 2. Data description
 
-The first stage before describing the data is to load it into the R environment. To to that, we will use the tidyverse package and load it with the `library()`function:
+The first stage before describing the data is to load it into the R environment. To to that, we will use the `tidyverse` package and load it with the `library()`function:
 
 ```{r, message=FALSE}
 library(tidyverse)
@@ -41,13 +43,13 @@ ls()
 
 Four data sets have been provided about the company. These data sets have information about the stores, features... Each of the data sets and its features are explained below:
 
-•	stores.csv
+*	**stores.csv**
 
 - Store: the anonymised store number
 - Type: store type, A: supercentre, B: superstore, C: supermarket
 - Size : store size (in square feet)
 
-•	features.csv
+*	**features.csv**
 
 - Store: the anonymised store number
 - Date:	the week with the dated Friday
@@ -58,7 +60,7 @@ Four data sets have been provided about the company. These data sets have inform
 - Unemployment: the unemployment rate
 - IsHoliday: whether the week is a special holiday week
 
-•	train.csv
+*	**train.csv**
 
 - Store: the anonymised store number
 - Department: the anonymised department number
@@ -66,19 +68,19 @@ Four data sets have been provided about the company. These data sets have inform
 - Weekly_Sales: sales for the given department in the given store
 - IsHoliday: whether the week is a special holiday week
 
-•	test.csv
+*	**test.csv**
 
 The validation dataset have the same fields as the train.csv, except we need to predict the weekly sales for each triplet of store, department, and date from 02/11/2012 to 26/07/2013.
 
-## 3. Data preparation
+# 3. Data preparation
 
 In this step we will carry out some "techniques" to arrange the data in a way that makes the analysis easier and to produce a better model.
 
-### 3.1. Data join
+## 3.1. Data join
 
 First of all, we will join the three data sets (stores, train and features). This will allow us to make the analysis simpler and more straightforward. The data will be linked using the attributes in common. Store, to link stores with train dataset; and Store, Date and IsHoliday to link the first dataset joined and features dataset.
 
-To performance the join we will use DPLYR package and the join will be a full_join () type, because we don't want to lose any data at this stage.
+To performance the join we will use `DPLYR` package and the join will be a full_join () type, because we don't want to lose any data at this stage.
 
 No missing or duplicate key values were detected.
 
@@ -89,11 +91,36 @@ train_joined = full_join(train, y= stores)
 train_joined = full_join(train_joined, y= features)
 ```
 
-The result is a data frame with all the features that contains 423325 observations. Why there are 1,755 more observations?
+The result is a data frame with all the features that contains 423,325 observations. There are 1,755 obsertacions that don't match between train and features. Why?
 
-### 3.2. Data cleaning
+Check how many NA values we have
+
+To know how many NA we have we can us the following code
+
+```{r}
+# Count number of TRUEs
+sum(is.na(train_joined))
+# Find mising values
+summary(train_joined)
+# Fins index of missing values in Weekly_Sales column
+which(is.na(train_joined$Weekly_Sales))
+```
+
+Besides missing values, we want to know if there are values in the data that are too extreme or bizarre to be plausible.
+
+
+## 3.2. Data pre-processing
 
 Secondly, we will clean the data.
+
+```{r}
+hist(train_joined$Weekly_Sales)
+
+boxplot(train_joined$Weekly_Sales)
+
+ggplot(train_joined, aes(Date, Weekly_Sales)) + geom_line() + xlab("Date") + ylab("Weekly_Sales")
+```
+
 
 Thirdly, we will generate new features: 1) Include a Week Number of the year (code needed); 2) Add a return column (code needed).
 
@@ -101,7 +128,7 @@ Finally, we will reduce the data set. After performing this procedure we have x 
 
 And this is the way the data set frame looks once pre-processed (code is needed).
 
-## 4. Identifying the key factors
+# 4. Identifying the key factors
 
 Graphs to see the correlation between the different variables
 
@@ -136,29 +163,21 @@ There is no clear correlation between the varibles previously graphed. BUt there
 Correlation matrix between all of our numerical features?
 
 
-## 5. Creating the predictive model
+# 5. Creating the predictive model
  
 ```{r}
-m3 = lm(Weekly_Sales ~ Dept + Store + Type + Promotion1 + Promotion2 + Promotion3 + Promotion4 + Promotion5 + CPI + Unemployment, data = train_joined)
-summary (m3)
+m1 = lm(Weekly_Sales ~ Dept + Store + Type + Promotion1 + Promotion2 + Promotion3 + Promotion4 + Promotion5 + CPI + Unemployment, data = train_joined)
+summary (m1)
 
 ```
 
 Linear model to find a specific value for Weekly Sales that we want to predict?
 
-## 6. Evaluation of forecasting accuracy 
+# 6. Evaluation of forecasting accuracy 
 
 table(features$Date)
 
-## 7. Conclusions
+# 7. Conclusions
 
-
-```{r}
-# join store-level data onto training dataset (so we know size and type).
-train_joined1 = left_join (train, y = stores)
-
-# join train_joined1 onto features dataset (so we know the rest of variables). 
-train_joined2 = left_join (train_joined1, y = features)
-
-```
+# References
 
