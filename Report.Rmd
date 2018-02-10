@@ -3,21 +3,20 @@ title: "Understanding Data and its Environment: Report assessment"
 author: Eugeni Vidal
 date: February 1, 2018
 output:
+  pdf_document: default
+  slidy_presentation:
+  word_document: default
   html_document:
     toc: true
     toc_depth: 2
     toc_float: true
     df_print: paged
-  slidy_presentation:
-  word_document: default
-  pdf_document: default
-bibliography: PhD/library.bib
+bibliography: references.bib
 ---
 
 # 1. Introduction
-Forecasting or making predictions of sales are fundamental and very challenging for retailers around the world [@Aldred2013] (reference needed). 
-
-This report explains the approach taken to forecast sales for a nationwide retailer in the U.S based on historical sales data for the departments of 45 stores. 
+Forecasting or making predictions of sales  [@]
+This report explains the approach taken to forecast sales for a nationwide retailer in the U.S based on historical sales data for the departments of 45 stores [@dill_bicycle_2003; @dill_bicycle_2003-1; @dill_revisiting_2016; @graefe_improving_2015]. 
 
 The consideration of the effects of promotional activities is an additional difficulty in the analysis given the fact that part of the promotion related data is absent from historical records. 
 
@@ -86,12 +85,12 @@ No missing or duplicate key values were detected.
 
 ```{r}
 # join store-level data onto training dataset (so we know size and type)
-train_joined = full_join(train, y= stores)
+train_joined = left_join(train, y= stores)
 # Join train_joined onto features dataset (so we know the ret of variables)
-train_joined = full_join(train_joined, y= features)
+train_joined = left_join(train_joined, y= features)
 ```
 
-The result is a data frame with all the features that contains 423,325 observations. There are 1,755 obsertacions that don't match between train and features. Why?
+The result is a data frame with all the features that contains 421,570 observations. IF we had done a full_joine there would have been 1,755 obsertacions that don't match between train and features. Why? the date is different - guess.
 
 Check how many NA values we have
 
@@ -121,6 +120,15 @@ boxplot(train_joined$Weekly_Sales)
 ggplot(train_joined, aes(Date, Weekly_Sales)) + geom_line() + xlab("Date") + ylab("Weekly_Sales")
 ```
 
+
+```{r}
+# convert date info in format 'mm/dd/yyyy'
+train_joined$Date <- as.Date(train_joined$Date, "%d/%m/%Y")
+```
+
+class(train_joined$Date)
+
+The class change is done, but I need to change the order from "%Y-%m-%d" to "%d/%m/%Y".
 
 Thirdly, we will generate new features: 1) Include a Week Number of the year (code needed); 2) Add a return column (code needed).
 
