@@ -1,28 +1,31 @@
 ---
 title: "Understanding Data and its Environment: Report assessment"
-author: Eugeni Vidal
-date: February 1, 2018
+author: "Eugeni Vidal"
+date: March 15, 2018
 output:
-  pdf_document: default
-  slidy_presentation:
-  word_document: default
   html_document:
     toc: true
     toc_depth: 2
     toc_float: true
     df_print: paged
+  pdf_document: default
+  word_document: default
+  slidy_presentation:
 bibliography: references.bib
 ---
 
 # 1. Introduction
-Forecasting or making predictions of sales  [@]
-This report explains the approach taken to forecast sales for a nationwide retailer in the U.S based on historical sales data for the departments of 45 stores [@dill_bicycle_2003; @dill_bicycle_2003-1; @dill_revisiting_2016; @graefe_improving_2015]. 
+Forecasting or making predictions of sales is one of the most important and challenging issues for retailers around the world[@reference_needed].
+
+This report explains the approach taken to forecast sales for a nationwide retailer in the U.S based on historical sales data for the departments of 45 stores . 
 
 The consideration of the effects of promotional activities is an additional difficulty in the analysis given the fact that part of the promotion related data is absent from historical records. 
 
-All task has been carried out using *R*. The report is reproducible based on code available at https://github.com/eugenividal/Understanding-data-report.
+The process is the descriotion, the x, the z, to get an analyticsl soliucion with rellevant exploratory analysis.
 
-The whole process is described in the sections below.
+The whole process using R is described in the following sections below.
+
+The report is reproducible based on code available at https://github.com/eugenividal/Understanding-data-report.
 
 # 2. Data description
 
@@ -40,50 +43,74 @@ We can check that these files have been loaded with the following command:
 ls()
 ```
 
-Four data sets have been provided about the company. These data sets have information about the stores, features... Each of the data sets and its features are explained below:
+We are provided with 4 data sets all in comma-separated values (csv) format: stores (45 obs. of 3 variables), features (8,190 obs. of 12 variables), train (421,570 obs. of 5 variables) and test (115,069 obs. of 5 variables). Each of the data sets and its features are explained below.
 
 *	**stores.csv**
 
-- Store: the anonymised store number
-- Type: store type, A: supercentre, B: superstore, C: supermarket
-- Size : store size (in square feet)
+>- Store: the anonymised store number
+>- Type: store type, A: supercentre, B: superstore, C: supermarket
+>- Size : store size (in square feet)
 
 *	**features.csv**
 
-- Store: the anonymised store number
-- Date:	the week with the dated Friday
-- Temperature: average temperature in the region
-- Fuel_Price: cost of fuel in the region
-- Promotions:	anonymised data related to promotions, mainly price reductions that the retailer is running. Promotion data is only available after Nov. 2011, and is not available for all stores all the time. Any missing value is marked with an NA.
-- CPI: the consumer price index
-- Unemployment: the unemployment rate
-- IsHoliday: whether the week is a special holiday week
+>- Store: the anonymised store number
+>- Date:	the week with the dated Friday
+>- Temperature: average temperature in the region
+>- Fuel_Price: cost of fuel in the region
+>- Promotions:	anonymised data related to promotions, mainly price reductions that the retailer is running. Promotion data is only available after Nov. 2011, and is not available for all stores all the time. Any missing value is marked with an NA.
+>- CPI: the consumer price index
+>- Unemployment: the unemployment rate
+>- IsHoliday: whether the week is a special holiday week
 
 *	**train.csv**
 
-- Store: the anonymised store number
-- Department: the anonymised department number
-- Date: the week with the dated Friday
-- Weekly_Sales: sales for the given department in the given store
-- IsHoliday: whether the week is a special holiday week
+>- Store: the anonymised store number
+>- Department: the anonymised department number
+>- Date: the week with the dated Friday
+>- Weekly_Sales: sales for the given department in the given store
+>- IsHoliday: whether the week is a special holiday week
 
 *	**test.csv**
 
 The validation dataset have the same fields as the train.csv, except we need to predict the weekly sales for each triplet of store, department, and date from 02/11/2012 to 26/07/2013.
 
+## 2.1 Quality
+
+### Completeness
+
+Promotion data is only available after November 2011 and is not available for all stores all the time, missing values are marked with an N/A. For promotion 1, 4157 of the 8191 values are marked with N/A, for promotion 2, 5269, for promotion 3, 4576 and for promotion 4, 4725 and for promotion 5 4139. Such a high volume of missing data could potentially have an impact on prediction if it is not dealt with in an appropriate way.
+
+### Accuracy
+
+There are some negative values within the data we have been given that we should be aware of. Within the features data set there are negative values for the temperature records and within the train data set there is 1286 negative values out of the 421571 data entries for the weekly sales figures.
+
+### Consistency
+
+The dates within the train, features and test datasets are all given in an English date format, despite them being from an American company. It is important to ensure that variables are formatted in the same way in each data set. 
+
+The variable IsHoliday is given as a true or false statement which may be difficult to process further in to the analysis, so can potentially be changed to a binary. 
+
+## 2.2 Relevance
+
+At this stage of the process we are assuming that all variables will be relevant until the modelling process begins (see section 4). It is expected that variables such as the store size and type will have a constant effect, whereas temperature and the price of petrol may have more subtle implications and may only be seasonal fluctuations.
+
 # 3. Data preparation
 
 In this step we will carry out some "techniques" to arrange the data in a way that makes the analysis easier and to produce a better model.
 
-## 3.1. Data join
+## 3.1. Joining
 
 First of all, we will join the three data sets (stores, train and features). This will allow us to make the analysis simpler and more straightforward. The data will be linked using the attributes in common. Store, to link stores with train dataset; and Store, Date and IsHoliday to link the first dataset joined and features dataset.
 
-To performance the join we will use `DPLYR` package and the join will be a full_join () type, because we don't want to lose any data at this stage.
+To performance the join we will use `DPLYR` package and the type of join will be left (using the function `left_join ()`). In other words, we will merge the three datasets in one matching all the rows from the train dataset with the rest of the datasets.
 
 No missing or duplicate key values were detected.
 
+In conclusion, the data linkage process will not present great difficulties due to the fact that: there are common attributes to join the tables, all the tables have the same format (csv), and no missing or duplicate key values were found.
+
+
 ```{r}
+library(dplyr)
 # join store-level data onto training dataset (so we know size and type)
 train_joined = left_join(train, y= stores)
 # Join train_joined onto features dataset (so we know the ret of variables)
@@ -92,9 +119,37 @@ train_joined = left_join(train_joined, y= features)
 
 The result is a data frame with all the features that contains 421,570 observations. IF we had done a full_joine there would have been 1,755 obsertacions that don't match between train and features. Why? the date is different - guess.
 
-Check how many NA values we have
 
-To know how many NA we have we can us the following code
+## 3.2. Transformation
+
+### Type conversion
+
+str(train_joined$IsHoliday)
+```{r}
+# convert IsHoliday to numeric
+train_joined$IsHoliday <- as.numeric(train_joined$IsHoliday)
+```
+class(train_joined$IsHoliday)
+
+class(train$Date)
+
+str(train_joined$Date)
+```{r}
+library(lubridate)
+# convert date info in format 'dmy'
+train_joined$Date <- dmy(train_joined$Date)
+```
+class(train_joined$Date)
+
+The class change is done, but I couldn't change to the English format "%Y-%m-%d" to "%d/%m/%Y".
+
+### Missing values
+
+Use Pandas’ interpolate function to estimate - or could not use these sections to train models (Chris).
+
+Check how many NA values we have.
+
+To know how many NA we have we can us the following code.
 
 ```{r}
 # Count number of TRUEs
@@ -107,36 +162,39 @@ which(is.na(train_joined$Weekly_Sales))
 
 Besides missing values, we want to know if there are values in the data that are too extreme or bizarre to be plausible.
 
+### Generating variables
 
-## 3.2. Data pre-processing
+We generate new columns: 1) Include a Week Number of the year (code needed); 2) Add a return column (code needed).Check Fran's example.
 
-Secondly, we will clean the data.
+Add a unique identifier column by concatenating store number and department type.
 
-```{r}
-hist(train_joined$Weekly_Sales)
-
-boxplot(train_joined$Weekly_Sales)
-
-ggplot(train_joined, aes(Date, Weekly_Sales)) + geom_line() + xlab("Date") + ylab("Weekly_Sales")
-```
+FullDF['DeptStore'] = FullDF[['Dept','Store']].dot([100,1])
 
 
-```{r}
-# convert date info in format 'mm/dd/yyyy'
-train_joined$Date <- as.Date(train_joined$Date, "%d/%m/%Y")
-```
-
-class(train_joined$Date)
-
-The class change is done, but I need to change the order from "%Y-%m-%d" to "%d/%m/%Y".
-
-Thirdly, we will generate new features: 1) Include a Week Number of the year (code needed); 2) Add a return column (code needed).
+## 3.3 Data reduction
 
 Finally, we will reduce the data set. After performing this procedure we have x observations which makes our data more manageable for further analysis.
 
 And this is the way the data set frame looks once pre-processed (code is needed).
 
 # 4. Identifying the key factors
+
+Graphs data visualization with `ggplot` package:
+
+
+
+```{R}
+library(ggplot2)
+# Plot sales per each of the department
+ggplot(train_joined,aes(x= Date, y= Weekly_Sales)) + geom_point(aes(color=Dept))+ labs(title = "Sales per store department", x = "Date", y = "Sales", color = "Department")
+
+```
+
+```{R}
+# Plot sales per type of store
+ggplot(train_joined,aes(x= Date, y= Weekly_Sales)) + geom_point(aes(color=Type))+ labs(title = "Sales per store department", x = "Date", y = "Sales", color = "Type of store")
+
+```
 
 Graphs to see the correlation between the different variables
 
@@ -150,8 +208,8 @@ install.packages("Hmisc")
 
 ```{R}
 # Plot weekly sales vs CPI
-ggplot(train_joined,aes(x= CPI, y= Weekly_Sales)) + geom_point(aes(color=train_joined$Type)) +stat_summary(fun.data=mean_cl_normal) + 
-  geom_smooth(method='lm')
+ggplot(train_joined,aes(x= CPI, y= Weekly_Sales)) + geom_point(aes(color=Type)) +stat_summary(fun.data=mean_cl_normal) + 
+  geom_smooth(method='lm') + labs(title = "weekly sales vs CPI", x = "Date", y = "Sales", color = "Type of store")
 ```
 
 
@@ -186,6 +244,8 @@ Linear model to find a specific value for Weekly Sales that we want to predict?
 table(features$Date)
 
 # 7. Conclusions
+
+You should, in the conclusions, report on the limitations of the data you have used or what future studies of the same topic might need to look for.
 
 # References
 
