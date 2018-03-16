@@ -3,8 +3,6 @@ title: 'Understanding Data and its Environment: Report assessment'
 author: "Eugeni Vidal"
 date: "March 16, 2018"
 output:
-  word_document:
-    toc: yes
   pdf_document:
     fig_caption: yes
     keep_tex: yes
@@ -16,6 +14,8 @@ output:
     toc: yes
     toc_depth: 2
     toc_float: yes
+  word_document:
+    toc: yes
 bibliography: My library.bib
 endnote: no
 fontfamily: mathpazo
@@ -40,7 +40,7 @@ opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE)
 
 # Introduction
 
-The Cambridge English Dictionary [-@cambridge_business_english_dictionary_cambridge_nodate] describes sales forecasting as "the statement of what the amount or value of a company's sales is likely to be in the future, based on information available now about the market, past sales, etc".
+The Cambridge English Dictionary [-@cambridge_business_english_dictionary_cambridge_2008] describes sales forecasting as "the statement of what the amount or value of a company's sales is likely to be in the future, based on information available now about the market, past sales, etc".
 
 The increase of competition, complexity in business tasks, and the fact that nowadays circumstances, in general, tend to change more rapidly makes increasingly important for companies the use of forecasting technics for the prediction of their future prospects [@lancaster_forecasting_1985, p.1].
 
@@ -52,11 +52,11 @@ The methodology used is divided into 7 different steps, from describing the data
 
 The whole process has been done using the open software R and it is reproducible based on code available at https://github.com/eugenividal/Understanding-data-report.
 
-This report is written as clearly and succinctly as possible, with the pretense that any person, without much prior knowledge in forecasting or in the R software, can understand it. For this purpose, the document describes not only the statistical process followed, but also the code used with the software R to carry it out. 
+This report is written as clearly and succinctly as possible, with the pretence that any person, without much prior knowledge in forecasting or in the R software, can understand it. For this purpose, the document describes not only the statistical process followed but also the code used with the software R to carry it out. 
 
 # Data description
 
-First of all, we will install the packages needed for the project and will activate their libraries.  
+First of all, we install the packages needed for the project and activate their libraries.  
 
 ```{r message=FALSE, message=FALSE, warning=FALSE, cache=FALSE}
 # Activate libraries
@@ -70,7 +70,7 @@ library(caret)
 library(car)
 ```
 
-Secondly, we will load the data into the R environment.
+Secondly, we load the data into the R environment.
 
 ```{r, message=FALSE, cache=FALSE}
 # Load data
@@ -95,7 +95,7 @@ Here is a brief description of each of them:
 - Date:	the week with the dated Friday <character>
 - Temperature: average temperature in the region <numeric>
 - Fuel_Price: cost of fuel in the region <numeric>
-- Promotions:	anonymised data related to promotions, mainly price reductions that the retailer is running <numeric>
+- Promotions:	anonymised data related to promotions, mainly price reductions  <numeric>
 - CPI: the consumer price index <numeric>
 - Unemployment: the unemployment rate <numeric>
 - IsHoliday: whether the week is a special holiday week <boolean>
@@ -108,11 +108,13 @@ Here is a brief description of each of them:
 - Weekly_Sales: sales for the given department in the given store <numeric>
 - IsHoliday: whether the week is a special holiday week <boolean>
 
-Variables of each dataset have been explored through counts, summary statistics, crosstabulation and visualisations in order to identify potential inconsistences or problems.
+\pagebreak
+
+Variables of each dataset have been explored through counts, summary statistics, crosstabulation and visualisations in order to identify potential inconsistencies or problems.
 
 The main issues detected are briefly described below.
 
-**1. Inconsistent data encoding**. In the stores dataset, some stores might be wrongly classified. Two stores under 50,000 sq ft are coded as type B and other two as type A, when presumably small size stores (<50,000 sq ft) should be type C. 
+**1. Inconsistent data encoding**. In the stores' dataset, some stores might be wrongly classified. Two stores under 50,000 sq ft are coded as type B and other two as type A, when presumably small size stores (<50,000 sq ft) should be type C. 
 
 ```{r, include=FALSE, cache=FALSE}
 # Crosstab Size and Type store data set
@@ -129,7 +131,7 @@ aggr(features, prop=FALSE, col = "grey", cex.lab = 0.85, cex.axis = 0.65,
      cex.main = 0.85)
 ```
 
-**3. Negative values**. Promotions have some negative values (4 in `Promotion1`, 25 in `Promotion2`, 13 in `Promotion3`, and 2 in `Promotion5`); also `Weekly Sales` (1,286 out of 42,1571 (0.3%)), in the train dataset.
+**3. Negative values**. Promotions have some negative values (4 `Promotion1`, 25 `Promotion2`, 13 `Promotion3`, and 2 `Promotion5`); also `Weekly Sales` (1,286 out of 42,1571), in the train dataset.
 
 **4. Class type errors**. The  class of the `Date` variable in all datasets is character instead of date. This does not allow to sort the data properly. Also in terms of class, it would be useful to have the variable IsHoliday in numeric type (1 or 0) rather than in boolean (true or false). 
 
@@ -145,7 +147,7 @@ options(scipen=999)
 ggplot(data=train, aes(train$Weekly_Sales)) + geom_histogram(aes(),color="black", alpha = 0.5) + labs(x="Weekly Sales", y="Frequency") + theme_classic() 
 ```
 
-**6. Extreme values**. Finally, to mention that some variables present observations that could be considered as outliers or at least extreme values. We analise this aspect later, when building the model.
+**6. Extreme values**. Finally, to mention that some variables present observations that could be considered as outliers or at least extreme values. We analyse this aspect later when building the model.
 
 ```{r,include=FALSE, cache=FALSE}
 # Scientific notation On
@@ -154,11 +156,11 @@ options(scipen=001)
 
 # Data joining
 
-The next step is to join the stores, train and features datasets in a single one. This will allow us to make the analysis simpler and more straightforward. 
+The next step is to join the stores, train and features datasets in a single one. This allow us to make the analysis simpler and more straightforward. 
 
 To performance the join, we use the function `left_join ()`. We chose this type of join because we want to end up having the same number of rows as the train dataset, which contains the response variable or variable to be forecast `Weekly_Sales`.  
 
-First, we link the stores dataset with the train one, using the common attribute `Store`; then the resultant dataset with the features dataset, using the common attributes `Store`, `Date` and `IsHoliday`. 
+First, we link the stores' dataset with the train one, using the common attribute `Store`; then the resultant dataset with the features dataset, using the common attributes `Store`, `Date` and `IsHoliday`. 
 
 ```{r, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
 # Join store-level data onto training dataset (so we know size and type)
@@ -167,15 +169,15 @@ data_joined = left_join(train, y= stores)
 data_joined = left_join(data_joined, y= features)
 ```
 
-The result is a data frame with 421,570 observations of 16 variables. Notice that 1,755 observations did not match between train and features datasets. This is because the features dataset collects observations for a longer period than the train dataset, and with a left join, only the observations which match with the principal dataset, in this case, train, remain. 
+The result is a data frame with 421,570 observations of 16 variables. Notice that 1,755 observations did not match between the train and the features datasets. This is because the features dataset collects observations for a longer period than the train dataset, and with a left join, only the observations which match with the principal dataset, in this case, train, remain. 
 
 # Cleaning and fixing problems with the data
 
-In this section, we will clean and fix all the inconsistencies or potential problems identified in the previous section data description. 
+In this section, we clean and fix all the inconsistencies or potential problems identified in the previous section data description. 
 
 ## Resolving inconsistent data encoding
 
-It is assumed that the type of store is based on size and consequently, all stores under 50,000 sq ft will be recoded as C type. This way, we solve the potential inconsistency detected in the description of the data.
+It is assumed that the type of store is based on size and consequently, all stores under 50,000 sq ft are recoded as C type. This way, we solve the potential inconsistency detected in the description of the data.
 
 ```{r, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
 # Recode `stores$Type` based on `stores$Size (sq ft)`
@@ -195,9 +197,11 @@ There two general approaches to deal with missing values:
 
 Deciding how we treat them will depend on the estimation of which approach will produce the most reliable and accurate results [@kabacoff_r_2011, p.354].
 
-The amount of missing data is an important factor in this sense. There is no established cutoff from the literature regarding an acceptable percentage of missing data in a dataset for valid statistical inferences [@dong_principled_2013, p.2]. Schafer [-@schafer_multiple_1999, p.7] argues that a missing rate of 5% or less is inconsequential, while Bennett [-@bennett_how_2001, p.464] considers that more than 10% is likely to biased the statistical analysis.
+The amount of missing data is an important factor in this sense. There is no established cutoff from the literature regarding an acceptable percentage of missing data in a dataset for valid statistical inferences [@dong_principled_2013, p.2]. Schafer [-@schafer_multiple_1999, p.7] argues that a missing rate of 5% or less is inconsequential, while Bennett [-@bennett_how_2001, p.464] considers that more than 10% is likely to bias the statistical analysis.
 
-In our case, given the high percentage of missing values in the promotion variables (around 50%), we will opt for deleting them. The missing data detected in the `CPI` and `Unemployment` variables disappeared when the datasets were joined With the left_join.
+In our case, given the high percentage of missing values in the promotion variables (around 50%), we opt for deleting them. The missing data detected in the `CPI` and `Unemployment` variables disappeared when the datasets were joined With the left_join.
+
+\pagebreak
 
 ```{r}
 # Delete Promotions
@@ -210,18 +214,18 @@ data_joined$Promotion5 <- NULL
 
 ## Negative values interpretation
 
-After analyzing the negative values of the `Weekly_Sales` variable, we concluded that they are returned products from previous weeks. So, no changes will be done in this regard. The negative values in the Promotions are no longer a problem, as they have been deleted.
+After analyzing the negative values of the `Weekly_Sales` variable, we concluded that they are returned products from previous weeks. So, no changes are done in this regard. On the other hand, the negative values in the Promotions are no longer a problem, as they have been deleted.
 
 ## Data type conversion
 
-In order to make the variable `IsHoliday` more manageable, we will convert the data type into numeric using the generic function `as.numeric()`.
+In order to make the variable `IsHoliday` more manageable, we convert its class type into numeric using the generic function `as.numeric()`.
 
 ```{r}
 # Convert IsHoliday to numeric
 data_joined$IsHoliday <- as.numeric(data_joined$IsHoliday)
 ```
 
-We will also convert the `Date` class from character into date with the `mdy ()` function of the lubridate package.
+We also convert the `Date` class from character into date with the `mdy ()` function of the lubridate package.
 
 ```{r message=FALSE}
 # Convert date info to date format 'dmy'
@@ -230,33 +234,33 @@ data_joined$Date <- dmy(data_joined$Date)
 
 ## Data distribution consideration<sup></sup>^[During the process of building the model, in an analysis exercise, the variables were normalized using log 10, but the results did not improve the model and on the contrary they made it more complicated and difficult to understand. This step is not explained in detail here due to the limitation of words in the report.]
 
-to have the errors normally distributed with constant variance is useful for the forecasting technique we will aply (multiple linear regression), although it is not considered necessary [@hyndman_forecasting:_2017]. 
+To have the errors normally distributed is useful for the multiple linear regression (the forecasting technique we will aply), although it is not considered necessary [@hyndman_forecasting:_2017]. 
 
-However, to make the model more understandable and interpretable, we preferred to keep all the variables with their original distribution.  
+However, to make the model more understandable and interpretable, we prefer to keep all the variables with their original distribution.  
 
-## Extreme values analysis<sup></sup>^[During the process of building the model, extremes values were analysed using a multivariate model apporach, but cleaning part of them did not influence in the results of the model. So, we opted for not treating them. This step is not explained in detail either due to the report's word limit]
+## Extreme values analysis<sup></sup>^[Also during the process of building the model, extremes values were analysed using a multivariate model apporach, but removing part of them did not influence in the results of the model. So, we opted for not treating them. This step is not explained in detail either due to the report's word limit]
 
-No changes have been done in terms of extreme values at this stage. 
+No changes are done in terms of extreme values at this stage. 
 
 # Data transformation
 
 Once the data inconsistencies or potential problems are fixed, some transformations are carried out in order to prepare the dataset for the model's construction.
 
-First, we will create a week number of year column in order to compare them.
+First, we create a week number of year column in order to compare them.
 
 ```{r}
 # Create a week number of the year variable
 data_joined$WeekNum <- as.numeric(format(data_joined$Date+3,"%U"))
 ```
 
-Secondly, we will extract the year from the date column.
+Secondly, we extract the year from the date column.
 
 ```{r}
 # Create a year variable
 data_joined$year = lubridate::year(data_joined$Date)
 ```
 
-Finally, we will generate a variable of the previous year Weekly Sales. As Zoltners et al argues [-@zoltners_complete_2001, p.342] the current year sales can be a very powerful predictor of the next year's sales. 
+Finally, we generate a variable of the previous year Weekly Sales. As Zoltners et al argue [-@zoltners_complete_2001, p.342] the current year sales can be a very powerful predictor of the next year's sales. 
 
 ```{r, echo=TRUE, fig.cap=c("Correlation Weekly Sales ~ Weekly Sales"), fig.height=3.5, fig.width=5.5, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
 # Create a previous year sales dataset
@@ -274,11 +278,11 @@ Figure 4 shows how highly correlated are both variables.
 ggplot(data_joined, aes(x=Weekly_Sales, y=prev_Weekly_Sales)) + geom_point(color="grey") + labs(title=NULL, x="Weekly Sales", y = "Previous year Weekly Sales") + theme_classic() 
 ```
 
-Due to the fact that the new variable is based on sales of a previous year, it will have a year of missing values. 
-We will handle this applying again listwise deletion, in other words, we will delete all the rows of the dataset in which there are missing values. This will reduce the sample size by 38% (from 421,570 to 261,541) which could reduce statistical power of our model dataset. However, an approach with the entire dataset could bias the results of the subsequent analysis [@bennett_how_2001, p.464].
+Due to the fact that the new variable is based on sales of a previous year, it has a year of missing values. 
+We handle this applying again listwise deletion, in other words, we delete all the rows of the dataset in which there are missing values. This will reduce the sample size by 38% (from 421,570 to 261,541) which could reduce statistical power of our model dataset. However, an approach with the entire dataset could bias the results of the subsequent analysis [@bennett_how_2001, p.464].
 
 ```{r, cache=FALSE}
-# Delete rowns with NA's
+# Delete rows with NA's
 data_joined = na.omit(data_joined)
 ```
 
@@ -294,9 +298,9 @@ head(data_joined)
 
 # Data partition
 
-In this section, the model dataset is divided into two parts. The training set (data_joinedT), with the 80% of the observations, that we will use to build the model; And the validation set (data_joinedV) with the remaining 20%, to adjust it. 
+In this section, the model dataset is divided into two parts. The training set (data_joinedT), with the 80% of the observations, that we will be used to build the model; And the validation set (data_joinedV) with the remaining 20%, to adjust it. 
 
-For the partition, we will use the `caret` package.
+For the partition, we use the `caret` package.
 
 ```{r, message=FALSE}
 # Subset the data into train and test
@@ -308,19 +312,19 @@ data_joinedV = data_joined[-trainIndex ,]
 
 # Building the model
 
-To build the model, we first choose the forecasting technique, then analyse which variables can be more influencal for the prediction, and finallly we obtain a specific model, which best explains how sales will be in the future.
+To build the model, we first choose the forecasting technique, then analyse which variables can be more influential for the prediction, and finally we obtain a specific model, which best explains how sales will be in the future.
 
 ## The choice of the technique
 
-The choice of forecasting technique is a major consideration. There are many different methods to apply, from pure guesswork to highly complex mathematical analysis [@lancaster_forecasting_1985, p.15]. Three factors are determinant on the decision: accuracy, time-scale and cost [@lancaster_forecasting_1985, pp.37-38].
+The choice of forecasting technique is a major consideration. There are many different methods to apply, from pure guesswork to highly complex mathematical analysis [@lancaster_forecasting_1985, p.15]. Three factors are determinant in the decision: accuracy, time-scale and cost [@lancaster_forecasting_1985, pp.37-38].
 
-In this case, we will opt for a multiple simple regression approach due to two fundamental reasons:
+In this case, we opt for a multiple simple regression approach due to two fundamental reasons:
 
 - it is the most understandable and accessible technique, and;
 
 - it is quicker and cheaper as well.
 
-Multiple linear regression is described as an statistical technique for predicting a quantitative response (or dependent) variable from two or more explanatory (or independent) variables [@kabacoff_r_2011, p.175].
+Multiple linear regression is described as a statistical technique for predicting a quantitative response (or dependent) variable from two or more explanatory (or independent) variables [@kabacoff_r_2011, p.175].
 
 Its general form is:
 
@@ -334,13 +338,13 @@ Where,
 - *B~1~,...B~k~* are the coefficients that measure the marginal effects of the predictors
 - *e~i~* are the residuals (a random variable that captures the fact that regression models typically do not fit the data perfectly).
 
-In our model, Weekly Sales would be the response or dependent variable that will be forecast, and the rest of columns the potential explanatory or independent variables that potentially will help on the prediction.
+In our model, Weekly Sales will be the response or dependent variable that has to  be forecast, and the rest of columns the potential explanatory or independent variables that potentially will help on the prediction.
 
-## The selection of explanatory variables
+## The selection of the explanatory variables
 
-To build the model we will use the training data set data_joinedT and will performe a stepwise selection of variables by backwards elimination. This means we will start fitting the model with all the candidate variables, and will progressively drop those which according to our interpretation are not suitable or not contribute to the sales prediction.
+To build the model we use the training data set data_joinedT and perform a stepwise selection of variables by backwards elimination. This means we start fitting the model with all the candidate variables, and drop progressively those which according to our interpretation are not suitable or not contribute to the sales prediction.
 
-TO fit the model we will use the generic function `lm ()` and then we will look at the output using `summary()`.
+To fit the model we use the generic function `lm ()` and then we show the output using `summary()`.
 
 ```{r, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
 # Fit the model (1)
@@ -354,20 +358,20 @@ At a glance from the output we can deduce that the model fits well:
 
 - the R-squared is very high (96.72%) which explains how well the model is fitting the actual data, and;
 
-- the F-statistic is also high (685,700) which indicates that there might be a relationship between the predictors and the response variables.
+- the F-statistic is also high (685,700) which tell us that there might be a relationship between the predictors and the response variables.
 
-However, additional tests are needed to find out if all the explanatory variables are actually good or contributing to the prediction, in other words, to optimise and make the model more optim and accurate. 
+However, additional tests are needed to find out if all the explanatory variables are actually good or contributing to the prediction, in other words, to optimise and make the model more optimal and accurate. 
 
-### Multiple colliniarity
+### Multiple collinearity
 
-First, we need to check if among the explanatory variables there is collinearity, in other words, if there is correlation between them. To find this out, we will use the basic function `vif ()`. If the Gvif value is arounf 1, there is no correlation; if it is between 1 and 5, there is a moderate correlation; and if it is over 5, the correlation is high or very high.
+First, we need to check if among the explanatory variables there is collinearity. To find this out, we will use the basic function `vif ()`. If the Gvif value is around 1, there is no correlation; if it is between 1 and 5, there is a moderate correlation; and if it is over 5, the correlation is high or very high.
 
 ```{r}
 # Calculate the Variance Inflation Factor
 vif(fit)
 ```
 
-As we can see from the results, between `Type` and `Size (sq ft)` there is a high colliniarity, which makes sense as the type of stores must be based on their Size. So, the first variable we drop is `Type`, and then we refit the model and check the output.
+As we can see from the results, between `Type` and `Size (sq ft)` there is a high collinearity, which makes sense as the type of stores must be based on their Size. So, the first variable we drop is `Type`, and then we refit the model and check the output.
 
 ```{r, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
 # Refit the model (2) - drop Type
@@ -377,7 +381,7 @@ summary(fit)
 
 The R-squared lowered very slightly, but the F-statistic is even higher.
 
-If we check the vif again, we can see that this time all the variables are around 1, since with the elimination of the Type variable, the high value of `Size (sq ft)` goes down to normal.
+If we check the vif again, we can see that this time all the variables are around 1, since, with the elimination of the Type variable, the high value of `Size (sq ft)` went down to normal.
 
 ```{r}
 # Recalculate the Variance Inflation Factor (2)
@@ -386,9 +390,9 @@ vif(fit)
 
 ### Influence on R-squared and F-statistic
 
-Although all variables have a good p-value, they can contribute diferently to the prediction. In fact, after carrying out a set of model fittings, we can conclude that the variables `IsHoliday`, `Temperature`, `Fuel_Price` and `CPI` do not contrinute at all to the prediction. 
+Although all variables have a good p-value, they can contribute differently to the prediction. In fact, after carrying out a set of model fittings, we concluded that the variables `IsHoliday`, `Temperature`, `Fuel_Price` and `CPI` do not contribute to the prediction. 
 
-This is evident when we look at the summary of the model fitted without them. The results of R-squared and p-values do not go any worse - they remain exactly the same, and in addition, the F-statistics jumps from 888,100 to 2,069,000.
+This is evident when we look at the summary of the model fitted without them. The results of R-squared and p-values do not go any worse, and in addition, the F-statistics jumps from 888,100 to 2,069,000.
 
 ```{r, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
 # Refit the model (3) - drop `IsHoliday`, `Temperature`, `Fuel_Price` and `CPI`
@@ -396,7 +400,7 @@ fit <- lm(Weekly_Sales ~ `Size (sq ft)`+ prev_Weekly_Sales + Unemployment, data=
 summary(fit)
 ```
 
-However, when we drop Unemployment or/and Size, there is a slight decrease in the R-squared, although, on the contrary, the F-statistic goes up. So, our deduction is that these two explanatory variables neither have influence on the prediction.
+However, when we drop Unemployment or/and Size, there is a slight decrease in the R-squared, although, on the contrary, the F-statistic goes up. So, our deduction is that these two explanatory variables neither have an influence.
 
 ```{r, echo=TRUE, message=FALSE, warning=FALSE, cache=FALSE, list(width.cutoff=60), tidy=TRUE, tidy.opts=list(width.cutoff=60)}
 # Refit the model (4) - drop Unemployment and Size
@@ -406,7 +410,7 @@ fit <- lm(Weekly_Sales ~ prev_Weekly_Sales, data= data_joinedT)
 
 ## The final model
 
-In conclusion, with the information we have available, the most optimal model for the prediction of sales that we can achieved is a simple linear regression between between the derived explanatory variable `prev_Weekly_Sales` and the respons variable `Weekly_Sales`.
+In conclusion, with the information we have available, the most optimal model for the prediction of sales that we can achieve is a simple linear regression between the derived explanatory variable `prev_Weekly_Sales` and the respons variable `Weekly_Sales`.
 
 ```{r, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
 # The final model
@@ -414,35 +418,34 @@ fit <- lm(Weekly_Sales ~ prev_Weekly_Sales, data= data_joinedT)
 #R2 = 96,73%, p-value = < 2.2e-16, F-statistic:  6,186,000
 ```
 
-# The model assessment
+# Model assessment
 
-For the assessment of the model first, we will calculate with the generic function `predict ()´ the predicted Weekly Sales for both, the training sets (data_joinedT) and the validation (data_joinedV).
+For the assessment of the model first, we calculate with the generic function `predict ()´ the predicted Weekly Sales for both, the training set (data_joinedT) and the validation (data_joinedV).
 
 ```{r, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
 # Find predicted values for both the training set and the validation
 data_joinedT$Pred.Weekly_Sales <- predict(fit, 
-    newdata = subset(data_joinedT, select=c(Weekly_Sales,  prev_Weekly_Sales)))
+    newdata = subset(data_joinedT, select=c(Weekly_Sales, prev_Weekly_Sales)))
 data_joinedV$Pred.Weekly_Sales <- predict(fit, 
-    newdata = subset(data_joinedV, select=c(Weekly_Sales,  prev_Weekly_Sales)))
+    newdata = subset(data_joinedV, select=c(Weekly_Sales, prev_Weekly_Sales)))
 ```
 
-Then, we will measure the model's accuracy calculating the Weighted Mean Absolute Error (WMAE) with the following formula:
+Then, we measure the model's accuracy calculating the Weighted Mean Absolute Error (WMAE) with the following formula:
 
 $$WMAE = \frac{1}{\sum{W}i}\sum_{i=1}^N{W}i\left\lvert{y_{i}-\hat{y}_{i}}\right\rvert$$
 Where, 
 
 - *N* is the total number of data rows in the validation data file,
 - *y~i~* is the actual sales,
-- *y~i~* the predicted sales,
-- *W~i~* are weitghts (*W~i~* = 5 if the week is a holiday week, other wise *W~i~* =1)
+- *y^~i~* the predicted sales,
+- *W~i~* are weights (*W~i~* = 5 if the week is a holiday week, other wise *W~i~* =1)
 
-To weigth the errors, we created dummy variables considering if it was a holiday week or not.
+To weigtht the errors, we create dummy variables considering if it is or not a holiday week.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
 # Create Error variable
 data_joinedT$Error <- c(data_joinedT$Weekly_Sales - data_joinedT$Pred.Weekly_Sales)
 data_joinedV$Error <- c(data_joinedV$Weekly_Sales - data_joinedV$Pred.Weekly_Sales) 
-
 # Create dummy variebles with weights
 data_joinedT$Dummy[data_joinedT$IsHoliday<1]<-1
 data_joinedT$Dummy[data_joinedT$IsHoliday>=1]<-5
@@ -454,40 +457,36 @@ data_joinedT$W <- data_joinedT$Dummy*data_joinedT$Error
 data_joinedV$W <- data_joinedV$Dummy*data_joinedV$Error
 ```
 
-Finally, with the code bellow, we calculate the accuracy measurament (in the training set first and in the validation set later). 
+Finally, we calculate the WMAE in each dataset. 
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
-# Check how good is the model on the validation set - correlation^2, RMSE and WMAE
-train.corr <- round(cor(data_joinedT$Pred.Weekly_Sales, data_joinedT$Weekly_Sales), 2)
-train.RMSE <- round(sqrt(mean((data_joinedT$W)^2)))
+# Check how good is the model on the training set - WMAE
 train.WMAE <- round(mean(abs(data_joinedT$W)))
-c(train.corr^2, train.RMSE, train.WMAE)
+c(train.WMAE)
 ```
 
 ```{r echo=TRUE, message=FALSE, warning=FALSE, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
-# Check how good is the model on the validation set - correlation^2, RMSE and WMAE
-valid.corr <- round(cor(data_joinedV$Pred.Weekly_Sales, data_joinedV$Weekly_Sales), 2)
-valid.RMSE <- round(sqrt(mean((data_joinedV$W)^2)))
+# Check how good is the model on the validation set - WMAE
 valid.WMAE <- round(mean(abs(data_joinedV$W)))
-c(valid.corr^2, valid.RMSE, valid.WMAE)
+c(valid.WMAE)
 ```
 
-Both data sets have very similar values, with high correlation, and not too high measurements of RMSE and WMAE considering the size of the datasets.
+As expected, the result is greater in the validation dataset, but only slightly bigger; and in both cases the WMAE (arround $2,500) can be considered rather low - taking into account the scale of the variable.
 
-We could conclude, therefore, that this is, indeed, an accurate predictive model.
+Therefore, we could conclude that we managed to build a relatively accurate model to predict sales.
 
 # Conclusions
 
-This report describes, preprocesses and analyzes a set of internal and external data related to the sales of a minorist retailer from the United States, in order to construct a precise model for sales prediction.
+This report describes, preprocesses and analyzes a set of internal and external data related to the sales of a nationwide retailer from the United States, in order to construct an accurate model for sales prediction.
 
 The main conclusions reached with the interpretation of the final model are the following:
 
-- From all the information available, the most powerful predictor of sales and actually the only  one is the sales from the prior year.
-- Contrary to our expectations, the size of stores does not seem to be a good predictor
+- From all the information available, the most powerful predictor of sales and actually the only one is the sales from the prior year.
+- Contrary to our expectations, the size of stores does not seem to be a good predictor.
 - The same conclusion is reached regarding the external factors.
 
-Sales vary over time (for some reason not explained by the other predictors), and this variation must be smooth, so one year's sales seem not too different from the year before.
+Sales vary over time, but this variation must be smooth, so one year's sales seem not too different from the year before.
 
-In short, the model essentially says that in the absence of other information, sales should be the same the next year as they were the previous one. 
+In short, the final model essentially says that in the absence of other information, sales should be the same the next year as they were the previous one. 
 
 # References

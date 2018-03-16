@@ -135,10 +135,10 @@
 
 \section{Introduction}\label{introduction}
 
-The Cambridge English Dictionary \textbf{???} describes sales
-forecasting as ``the statement of what the amount or value of a
-company's sales is likely to be in the future, based on information
-available now about the market, past sales, etc''.
+The Cambridge English Dictionary (2008) describes sales forecasting as
+``the statement of what the amount or value of a company's sales is
+likely to be in the future, based on information available now about the
+market, past sales, etc''.
 
 The increase of competition, complexity in business tasks, and the fact
 that nowadays circumstances, in general, tend to change more rapidly
@@ -167,15 +167,15 @@ reproducible based on code available at
 \url{https://github.com/eugenividal/Understanding-data-report}.
 
 This report is written as clearly and succinctly as possible, with the
-pretense that any person, without much prior knowledge in forecasting or
+pretence that any person, without much prior knowledge in forecasting or
 in the R software, can understand it. For this purpose, the document
-describes not only the statistical process followed, but also the code
+describes not only the statistical process followed but also the code
 used with the software R to carry it out.
 
 \section{Data description}\label{data-description}
 
-First of all, we will install the packages needed for the project and
-will activate their libraries.
+First of all, we install the packages needed for the project and
+activate their libraries.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -191,7 +191,7 @@ will activate their libraries.
 \end{Highlighting}
 \end{Shaded}
 
-Secondly, we will load the data into the R environment.
+Secondly, we load the data into the R environment.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -233,7 +233,7 @@ Here is a brief description of each of them:
   Fuel\_Price: cost of fuel in the region 
 \item
   Promotions: anonymised data related to promotions, mainly price
-  reductions that the retailer is running 
+  reductions 
 \item
   CPI: the consumer price index 
 \item
@@ -258,13 +258,15 @@ Here is a brief description of each of them:
   IsHoliday: whether the week is a special holiday week 
 \end{itemize}
 
+\pagebreak
+
 Variables of each dataset have been explored through counts, summary
 statistics, crosstabulation and visualisations in order to identify
-potential inconsistences or problems.
+potential inconsistencies or problems.
 
 The main issues detected are briefly described below.
 
-\textbf{1. Inconsistent data encoding}. In the stores dataset, some
+\textbf{1. Inconsistent data encoding}. In the stores' dataset, some
 stores might be wrongly classified. Two stores under 50,000 sq ft are
 coded as type B and other two as type A, when presumably small size
 stores (\textless{}50,000 sq ft) should be type C.
@@ -289,11 +291,10 @@ each combination of variables.
 \caption{Missing values}
 \end{figure}
 
-\textbf{3. Negative values}. Promotions have some negative values (4 in
-\texttt{Promotion1}, 25 in \texttt{Promotion2}, 13 in
-\texttt{Promotion3}, and 2 in \texttt{Promotion5}); also
-\texttt{Weekly\ Sales} (1,286 out of 42,1571 (0.3\%)), in the train
-dataset.
+\textbf{3. Negative values}. Promotions have some negative values (4
+\texttt{Promotion1}, 25 \texttt{Promotion2}, 13 \texttt{Promotion3}, and
+2 \texttt{Promotion5}); also \texttt{Weekly\ Sales} (1,286 out of
+42,1571), in the train dataset.
 
 \textbf{4. Class type errors}. The class of the \texttt{Date} variable
 in all datasets is character instead of date. This does not allow to
@@ -323,12 +324,12 @@ and \texttt{Fuel\_Price} and \texttt{CPI} presents a bimodal shape.
 
 \textbf{6. Extreme values}. Finally, to mention that some variables
 present observations that could be considered as outliers or at least
-extreme values. We analise this aspect later, when building the model.
+extreme values. We analyse this aspect later when building the model.
 
 \section{Data joining}\label{data-joining}
 
 The next step is to join the stores, train and features datasets in a
-single one. This will allow us to make the analysis simpler and more
+single one. This allow us to make the analysis simpler and more
 straightforward.
 
 To performance the join, we use the function \texttt{left\_join\ ()}. We
@@ -336,7 +337,7 @@ chose this type of join because we want to end up having the same number
 of rows as the train dataset, which contains the response variable or
 variable to be forecast \texttt{Weekly\_Sales}.
 
-First, we link the stores dataset with the train one, using the common
+First, we link the stores' dataset with the train one, using the common
 attribute \texttt{Store}; then the resultant dataset with the features
 dataset, using the common attributes \texttt{Store}, \texttt{Date} and
 \texttt{IsHoliday}.
@@ -366,25 +367,24 @@ dataset, using the common attributes \texttt{Store}, \texttt{Date} and
 \end{verbatim}
 
 The result is a data frame with 421,570 observations of 16 variables.
-Notice that 1,755 observations did not match between train and features
-datasets. This is because the features dataset collects observations for
-a longer period than the train dataset, and with a left join, only the
-observations which match with the principal dataset, in this case,
-train, remain.
+Notice that 1,755 observations did not match between the train and the
+features datasets. This is because the features dataset collects
+observations for a longer period than the train dataset, and with a left
+join, only the observations which match with the principal dataset, in
+this case, train, remain.
 
 \section{Cleaning and fixing problems with the
 data}\label{cleaning-and-fixing-problems-with-the-data}
 
-In this section, we will clean and fix all the inconsistencies or
-potential problems identified in the previous section data description.
+In this section, we clean and fix all the inconsistencies or potential
+problems identified in the previous section data description.
 
 \subsection{Resolving inconsistent data
 encoding}\label{resolving-inconsistent-data-encoding}
 
 It is assumed that the type of store is based on size and consequently,
-all stores under 50,000 sq ft will be recoded as C type. This way, we
-solve the potential inconsistency detected in the description of the
-data.
+all stores under 50,000 sq ft are recoded as C type. This way, we solve
+the potential inconsistency detected in the description of the data.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -418,13 +418,15 @@ is no established cutoff from the literature regarding an acceptable
 percentage of missing data in a dataset for valid statistical inferences
 (Dong and Peng, 2013 p. 2). Schafer (1999 p. 7) argues that a missing
 rate of 5\% or less is inconsequential, while Bennett (2001 p. 464)
-considers that more than 10\% is likely to biased the statistical
+considers that more than 10\% is likely to bias the statistical
 analysis.
 
 In our case, given the high percentage of missing values in the
-promotion variables (around 50\%), we will opt for deleting them. The
-missing data detected in the \texttt{CPI} and \texttt{Unemployment}
-variables disappeared when the datasets were joined With the left\_join.
+promotion variables (around 50\%), we opt for deleting them. The missing
+data detected in the \texttt{CPI} and \texttt{Unemployment} variables
+disappeared when the datasets were joined With the left\_join.
+
+\pagebreak
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -442,13 +444,14 @@ interpretation}\label{negative-values-interpretation}
 
 After analyzing the negative values of the \texttt{Weekly\_Sales}
 variable, we concluded that they are returned products from previous
-weeks. So, no changes will be done in this regard. The negative values
-in the Promotions are no longer a problem, as they have been deleted.
+weeks. So, no changes are done in this regard. On the other hand, the
+negative values in the Promotions are no longer a problem, as they have
+been deleted.
 
 \subsection{Data type conversion}\label{data-type-conversion}
 
 In order to make the variable \texttt{IsHoliday} more manageable, we
-will convert the data type into numeric using the generic function
+convert its class type into numeric using the generic function
 \texttt{as.numeric()}.
 
 \begin{Shaded}
@@ -458,8 +461,8 @@ will convert the data type into numeric using the generic function
 \end{Highlighting}
 \end{Shaded}
 
-We will also convert the \texttt{Date} class from character into date
-with the \texttt{mdy\ ()} function of the lubridate package.
+We also convert the \texttt{Date} class from character into date with
+the \texttt{mdy\ ()} function of the lubridate package.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -476,22 +479,21 @@ distribution consideration\footnote{During the process of building the
   is not explained in detail here due to the limitation of words in the
   report.}}{Data distribution consideration}}\label{data-distribution-consideration}
 
-to have the errors normally distributed with constant variance is useful
-for the forecasting technique we will aply (multiple linear regression),
-although it is not considered necessary (Hyndman and Athana­sopou­los,
-2017).
+To have the errors normally distributed is useful for the multiple
+linear regression (the forecasting technique we will aply), although it
+is not considered necessary (Hyndman and Athana­sopou­los, 2017).
 
 However, to make the model more understandable and interpretable, we
-preferred to keep all the variables with their original distribution.
+prefer to keep all the variables with their original distribution.
 
 \subsection[Extreme values analysis]{\texorpdfstring{Extreme values
-analysis\footnote{During the process of building the model, extremes
-  values were analysed using a multivariate model apporach, but cleaning
-  part of them did not influence in the results of the model. So, we
-  opted for not treating them. This step is not explained in detail
-  either due to the report's word limit}}{Extreme values analysis}}\label{extreme-values-analysis}
+analysis\footnote{Also during the process of building the model,
+  extremes values were analysed using a multivariate model apporach, but
+  removing part of them did not influence in the results of the model.
+  So, we opted for not treating them. This step is not explained in
+  detail either due to the report's word limit}}{Extreme values analysis}}\label{extreme-values-analysis}
 
-No changes have been done in terms of extreme values at this stage.
+No changes are done in terms of extreme values at this stage.
 
 \section{Data transformation}\label{data-transformation}
 
@@ -499,8 +501,7 @@ Once the data inconsistencies or potential problems are fixed, some
 transformations are carried out in order to prepare the dataset for the
 model's construction.
 
-First, we will create a week number of year column in order to compare
-them.
+First, we create a week number of year column in order to compare them.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -509,7 +510,7 @@ them.
 \end{Highlighting}
 \end{Shaded}
 
-Secondly, we will extract the year from the date column.
+Secondly, we extract the year from the date column.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -518,9 +519,9 @@ Secondly, we will extract the year from the date column.
 \end{Highlighting}
 \end{Shaded}
 
-Finally, we will generate a variable of the previous year Weekly Sales.
-As Zoltners et al argues (2001 p. 342) the current year sales can be a
-very powerful predictor of the next year's sales.
+Finally, we generate a variable of the previous year Weekly Sales. As
+Zoltners et al argue (2001 p. 342) the current year sales can be a very
+powerful predictor of the next year's sales.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -555,17 +556,16 @@ Sales}
 \end{figure}
 
 Due to the fact that the new variable is based on sales of a previous
-year, it will have a year of missing values. We will handle this
-applying again listwise deletion, in other words, we will delete all the
-rows of the dataset in which there are missing values. This will reduce
-the sample size by 38\% (from 421,570 to 261,541) which could reduce
-statistical power of our model dataset. However, an approach with the
-entire dataset could bias the results of the subsequent analysis
-(Bennett, 2001 p. 464).
+year, it has a year of missing values. We handle this applying again
+listwise deletion, in other words, we delete all the rows of the dataset
+in which there are missing values. This will reduce the sample size by
+38\% (from 421,570 to 261,541) which could reduce statistical power of
+our model dataset. However, an approach with the entire dataset could
+bias the results of the subsequent analysis (Bennett, 2001 p. 464).
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# Delete rowns with NA's}
+\CommentTok{# Delete rows with NA's}
 \NormalTok{data_joined =}\StringTok{ }\KeywordTok{na.omit}\NormalTok{(data_joined)}
 \end{Highlighting}
 \end{Shaded}
@@ -574,10 +574,10 @@ entire dataset could bias the results of the subsequent analysis
 
 In this section, the model dataset is divided into two parts. The
 training set (data\_joinedT), with the 80\% of the observations, that we
-will use to build the model; And the validation set (data\_joinedV) with
-the remaining 20\%, to adjust it.
+will be used to build the model; And the validation set (data\_joinedV)
+with the remaining 20\%, to adjust it.
 
-For the partition, we will use the \texttt{caret} package.
+For the partition, we use the \texttt{caret} package.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -592,8 +592,8 @@ For the partition, we will use the \texttt{caret} package.
 \section{Building the model}\label{building-the-model}
 
 To build the model, we first choose the forecasting technique, then
-analyse which variables can be more influencal for the prediction, and
-finallly we obtain a specific model, which best explains how sales will
+analyse which variables can be more influential for the prediction, and
+finally we obtain a specific model, which best explains how sales will
 be in the future.
 
 \subsection{The choice of the
@@ -602,11 +602,11 @@ technique}\label{the-choice-of-the-technique}
 The choice of forecasting technique is a major consideration. There are
 many different methods to apply, from pure guesswork to highly complex
 mathematical analysis (Lancaster and Lomas, 1985 p. 15). Three factors
-are determinant on the decision: accuracy, time-scale and cost
+are determinant in the decision: accuracy, time-scale and cost
 (Lancaster and Lomas, 1985 pp. 37--38).
 
-In this case, we will opt for a multiple simple regression approach due
-to two fundamental reasons:
+In this case, we opt for a multiple simple regression approach due to
+two fundamental reasons:
 
 \begin{itemize}
 \item
@@ -615,7 +615,7 @@ to two fundamental reasons:
   it is quicker and cheaper as well.
 \end{itemize}
 
-Multiple linear regression is described as an statistical technique for
+Multiple linear regression is described as a statistical technique for
 predicting a quantitative response (or dependent) variable from two or
 more explanatory (or independent) variables (Kabacoff, 2011 p. 175).
 
@@ -644,22 +644,22 @@ Where,
   perfectly).
 \end{itemize}
 
-In our model, Weekly Sales would be the response or dependent variable
-that will be forecast, and the rest of columns the potential explanatory
-or independent variables that potentially will help on the prediction.
-
-\subsection{The selection of explanatory
-variables}\label{the-selection-of-explanatory-variables}
-
-To build the model we will use the training data set data\_joinedT and
-will performe a stepwise selection of variables by backwards
-elimination. This means we will start fitting the model with all the
-candidate variables, and will progressively drop those which according
-to our interpretation are not suitable or not contribute to the sales
+In our model, Weekly Sales will be the response or dependent variable
+that has to be forecast, and the rest of columns the potential
+explanatory or independent variables that potentially will help on the
 prediction.
 
-TO fit the model we will use the generic function \texttt{lm\ ()} and
-then we will look at the output using \texttt{summary()}.
+\subsection{The selection of the explanatory
+variables}\label{the-selection-of-the-explanatory-variables}
+
+To build the model we use the training data set data\_joinedT and
+perform a stepwise selection of variables by backwards elimination. This
+means we start fitting the model with all the candidate variables, and
+drop progressively those which according to our interpretation are not
+suitable or not contribute to the sales prediction.
+
+To fit the model we use the generic function \texttt{lm\ ()} and then we
+show the output using \texttt{summary()}.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -680,26 +680,26 @@ then we will look at the output using \texttt{summary()}.
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -123147    -947    -175     779  126538 
+## -123403    -936    -166     777  126536 
 ## 
 ## Coefficients:
 ##                     Estimate Std. Error  t value Pr(>|t|)    
-## (Intercept)        2.926e+03  1.785e+02   16.393  < 2e-16 ***
-## IsHoliday          4.729e+02  3.722e+01   12.706  < 2e-16 ***
-## TypeB             -6.245e+02  4.282e+01  -14.585  < 2e-16 ***
-## TypeC             -8.469e+02  7.622e+01  -11.112  < 2e-16 ***
-## `Size (sq ft)`    -3.392e-03  4.676e-04   -7.253 4.09e-13 ***
-## prev_Weekly_Sales  9.918e-01  4.148e-04 2390.846  < 2e-16 ***
-## Temperature        5.002e+00  5.892e-01    8.490  < 2e-16 ***
-## Fuel_Price        -2.925e+02  3.942e+01   -7.421 1.16e-13 ***
-## CPI               -1.320e+00  2.706e-01   -4.877 1.08e-06 ***
-## Unemployment      -1.097e+02  5.270e+00  -20.809  < 2e-16 ***
+## (Intercept)        2.843e+03  1.761e+02   16.141  < 2e-16 ***
+## IsHoliday          5.038e+02  3.682e+01   13.683  < 2e-16 ***
+## TypeB             -6.368e+02  4.236e+01  -15.034  < 2e-16 ***
+## TypeC             -8.705e+02  7.541e+01  -11.543  < 2e-16 ***
+## `Size (sq ft)`    -3.817e-03  4.625e-04   -8.254  < 2e-16 ***
+## prev_Weekly_Sales  9.937e-01  4.094e-04 2426.957  < 2e-16 ***
+## Temperature        5.002e+00  5.817e-01    8.599  < 2e-16 ***
+## Fuel_Price        -2.511e+02  3.892e+01   -6.451 1.11e-10 ***
+## CPI               -1.415e+00  2.673e-01   -5.292 1.21e-07 ***
+## Unemployment      -1.114e+02  5.197e+00  -21.433  < 2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 4144 on 209223 degrees of freedom
-## Multiple R-squared:  0.9669, Adjusted R-squared:  0.9669 
-## F-statistic: 6.787e+05 on 9 and 209223 DF,  p-value: < 2.2e-16
+## Residual standard error: 4091 on 209223 degrees of freedom
+## Multiple R-squared:  0.9678, Adjusted R-squared:  0.9678 
+## F-statistic: 6.996e+05 on 9 and 209223 DF,  p-value: < 2.2e-16
 \end{verbatim}
 
 At a glance from the output we can deduce that the model fits well:
@@ -713,23 +713,21 @@ At a glance from the output we can deduce that the model fits well:
   the R-squared is very high (96.72\%) which explains how well the model
   is fitting the actual data, and;
 \item
-  the F-statistic is also high (685,700) which indicates that there
-  might be a relationship between the predictors and the response
-  variables.
+  the F-statistic is also high (685,700) which tell us that there might
+  be a relationship between the predictors and the response variables.
 \end{itemize}
 
 However, additional tests are needed to find out if all the explanatory
 variables are actually good or contributing to the prediction, in other
-words, to optimise and make the model more optim and accurate.
+words, to optimise and make the model more optimal and accurate.
 
-\subsubsection{Multiple colliniarity}\label{multiple-colliniarity}
+\subsubsection{Multiple collinearity}\label{multiple-collinearity}
 
 First, we need to check if among the explanatory variables there is
-collinearity, in other words, if there is correlation between them. To
-find this out, we will use the basic function \texttt{vif\ ()}. If the
-Gvif value is arounf 1, there is no correlation; if it is between 1 and
-5, there is a moderate correlation; and if it is over 5, the correlation
-is high or very high.
+collinearity. To find this out, we will use the basic function
+\texttt{vif\ ()}. If the Gvif value is around 1, there is no
+correlation; if it is between 1 and 5, there is a moderate correlation;
+and if it is over 5, the correlation is high or very high.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -740,18 +738,18 @@ is high or very high.
 
 \begin{verbatim}
 ##                        GVIF Df GVIF^(1/(2*Df))
-## IsHoliday          1.044796  1        1.022152
-## Type              10.912872  2        1.817543
-## `Size (sq ft)`     9.839387  1        3.136780
-## prev_Weekly_Sales  1.065071  1        1.032023
-## Temperature        1.368115  1        1.169665
-## Fuel_Price         1.431323  1        1.196379
-## CPI                1.403172  1        1.184556
-## Unemployment       1.120339  1        1.058461
+## IsHoliday          1.044900  1        1.022203
+## Type              10.952877  2        1.819207
+## `Size (sq ft)`     9.873026  1        3.142137
+## prev_Weekly_Sales  1.065864  1        1.032407
+## Temperature        1.368935  1        1.170015
+## Fuel_Price         1.432051  1        1.196683
+## CPI                1.403699  1        1.184778
+## Unemployment       1.121054  1        1.058798
 \end{verbatim}
 
 As we can see from the results, between \texttt{Type} and
-\texttt{Size\ (sq\ ft)} there is a high colliniarity, which makes sense
+\texttt{Size\ (sq\ ft)} there is a high collinearity, which makes sense
 as the type of stores must be based on their Size. So, the first
 variable we drop is \texttt{Type}, and then we refit the model and check
 the output.
@@ -773,31 +771,31 @@ the output.
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -123209    -932    -175     775  126458 
+## -123466    -920    -165     772  126451 
 ## 
 ## Coefficients:
-##                     Estimate Std. Error  t value  Pr(>|t|)    
-## (Intercept)        2.052e+03  1.630e+02   12.588   < 2e-16 ***
-## IsHoliday          4.606e+02  3.722e+01   12.377   < 2e-16 ***
-## `Size (sq ft)`     2.027e-03  1.543e-04   13.135   < 2e-16 ***
-## prev_Weekly_Sales  9.917e-01  4.147e-04 2391.262   < 2e-16 ***
-## Temperature        4.785e+00  5.644e-01    8.478   < 2e-16 ***
-## Fuel_Price        -3.534e+02  3.905e+01   -9.048   < 2e-16 ***
-## CPI               -1.092e+00  2.696e-01   -4.049 0.0000515 ***
-## Unemployment      -1.137e+02  5.259e+00  -21.626   < 2e-16 ***
+##                     Estimate Std. Error  t value Pr(>|t|)    
+## (Intercept)        1.949e+03  1.609e+02   12.110  < 2e-16 ***
+## IsHoliday          4.901e+02  3.682e+01   13.311  < 2e-16 ***
+## `Size (sq ft)`     1.740e-03  1.524e-04   11.414  < 2e-16 ***
+## prev_Weekly_Sales  9.936e-01  4.093e-04 2427.536  < 2e-16 ***
+## Temperature        4.745e+00  5.570e-01    8.519  < 2e-16 ***
+## Fuel_Price        -3.129e+02  3.856e+01   -8.114 4.91e-16 ***
+## CPI               -1.188e+00  2.663e-01   -4.463 8.09e-06 ***
+## Unemployment      -1.155e+02  5.186e+00  -22.279  < 2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 4146 on 209225 degrees of freedom
-## Multiple R-squared:  0.9668, Adjusted R-squared:  0.9668 
-## F-statistic: 8.716e+05 on 7 and 209225 DF,  p-value: < 2.2e-16
+## Residual standard error: 4094 on 209225 degrees of freedom
+## Multiple R-squared:  0.9678, Adjusted R-squared:  0.9678 
+## F-statistic: 8.984e+05 on 7 and 209225 DF,  p-value: < 2.2e-16
 \end{verbatim}
 
 The R-squared lowered very slightly, but the F-statistic is even higher.
 
 If we check the vif again, we can see that this time all the variables
-are around 1, since with the elimination of the Type variable, the high
-value of \texttt{Size\ (sq\ ft)} goes down to normal.
+are around 1, since, with the elimination of the Type variable, the high
+value of \texttt{Size\ (sq\ ft)} went down to normal.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -808,24 +806,23 @@ value of \texttt{Size\ (sq\ ft)} goes down to normal.
 
 \begin{verbatim}
 ##         IsHoliday    `Size (sq ft)` prev_Weekly_Sales       Temperature 
-##          1.043390          1.070509          1.063367          1.254099 
+##          1.043297          1.070843          1.063933          1.253817 
 ##        Fuel_Price               CPI      Unemployment 
-##          1.403675          1.391370          1.114223
+##          1.404559          1.391764          1.114889
 \end{verbatim}
 
 \subsubsection{Influence on R-squared and
 F-statistic}\label{influence-on-r-squared-and-f-statistic}
 
 Although all variables have a good p-value, they can contribute
-diferently to the prediction. In fact, after carrying out a set of model
-fittings, we can conclude that the variables \texttt{IsHoliday},
+differently to the prediction. In fact, after carrying out a set of
+model fittings, we concluded that the variables \texttt{IsHoliday},
 \texttt{Temperature}, \texttt{Fuel\_Price} and \texttt{CPI} do not
-contrinute at all to the prediction.
+contribute to the prediction.
 
 This is evident when we look at the summary of the model fitted without
-them. The results of R-squared and p-values do not go any worse - they
-remain exactly the same, and in addition, the F-statistics jumps from
-888,100 to 2,069,000.
+them. The results of R-squared and p-values do not go any worse, and in
+addition, the F-statistics jumps from 888,100 to 2,069,000.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -845,26 +842,26 @@ remain exactly the same, and in addition, the F-statistics jumps from
 ## 
 ## Residuals:
 ##     Min      1Q  Median      3Q     Max 
-## -123326    -920    -178     766  126416 
+## -123574    -908    -169     764  126413 
 ## 
 ## Coefficients:
 ##                     Estimate Std. Error t value Pr(>|t|)    
-## (Intercept)        9.128e+02  4.563e+01   20.00   <2e-16 ***
-## `Size (sq ft)`     1.912e-03  1.541e-04   12.41   <2e-16 ***
-## prev_Weekly_Sales  9.918e-01  4.147e-04 2391.73   <2e-16 ***
-## Unemployment      -1.140e+02  4.995e+00  -22.82   <2e-16 ***
+## (Intercept)        9.239e+02  4.500e+01   20.53   <2e-16 ***
+## `Size (sq ft)`     1.632e-03  1.521e-04   10.73   <2e-16 ***
+## prev_Weekly_Sales  9.937e-01  4.092e-04 2428.30   <2e-16 ***
+## Unemployment      -1.139e+02  4.924e+00  -23.14   <2e-16 ***
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ## 
-## Residual standard error: 4149 on 209229 degrees of freedom
-## Multiple R-squared:  0.9668, Adjusted R-squared:  0.9668 
-## F-statistic: 2.031e+06 on 3 and 209229 DF,  p-value: < 2.2e-16
+## Residual standard error: 4096 on 209229 degrees of freedom
+## Multiple R-squared:  0.9678, Adjusted R-squared:  0.9678 
+## F-statistic: 2.093e+06 on 3 and 209229 DF,  p-value: < 2.2e-16
 \end{verbatim}
 
 However, when we drop Unemployment or/and Size, there is a slight
 decrease in the R-squared, although, on the contrary, the F-statistic
 goes up. So, our deduction is that these two explanatory variables
-neither have influence on the prediction.
+neither have an influence.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -877,8 +874,8 @@ neither have influence on the prediction.
 \subsection{The final model}\label{the-final-model}
 
 In conclusion, with the information we have available, the most optimal
-model for the prediction of sales that we can achieved is a simple
-linear regression between between the derived explanatory variable
+model for the prediction of sales that we can achieve is a simple linear
+regression between the derived explanatory variable
 \texttt{prev\_Weekly\_Sales} and the respons variable
 \texttt{Weekly\_Sales}.
 
@@ -890,11 +887,11 @@ linear regression between between the derived explanatory variable
 \end{Highlighting}
 \end{Shaded}
 
-\section{The model assessment}\label{the-model-assessment}
+\section{Model assessment}\label{model-assessment}
 
-For the assessment of the model first, we will calculate with the
-generic function `predict ()´ the predicted Weekly Sales for both, the
-training sets (data\_joinedT) and the validation (data\_joinedV).
+For the assessment of the model first, we calculate with the generic
+function `predict ()´ the predicted Weekly Sales for both, the training
+set (data\_joinedT) and the validation (data\_joinedV).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -907,7 +904,7 @@ training sets (data\_joinedT) and the validation (data\_joinedV).
 \end{Highlighting}
 \end{Shaded}
 
-Then, we will measure the model's accuracy calculating the Weighted Mean
+Then, we measure the model's accuracy calculating the Weighted Mean
 Absolute Error (WMAE) with the following formula:
 
 \[WMAE = \frac{1}{\sum{W}i}\sum_{i=1}^N{W}i\left\lvert{y_{i}-\hat{y}_{i}}\right\rvert\]
@@ -920,63 +917,54 @@ Where,
 \item
   \emph{y\textsubscript{i}} is the actual sales,
 \item
-  \emph{y\textsubscript{i}} the predicted sales,
+  \emph{y\^{}\textsubscript{i}} the predicted sales,
 \item
-  \emph{W\textsubscript{i}} are weitghts (\emph{W\textsubscript{i}} = 5
+  \emph{W\textsubscript{i}} are weights (\emph{W\textsubscript{i}} = 5
   if the week is a holiday week, other wise \emph{W\textsubscript{i}}
   =1)
 \end{itemize}
 
-To weigth the errors, we created dummy variables considering if it was a
-holiday week or not.
+To weigtht the errors, we create dummy variables considering if it is or
+not a holiday week.
 
-Finally, with the code bellow, we calculate the accuracy measurament (in
-the training set first and in the validation set later).
+Finally, we calculate the WMAE in each dataset.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# Check how good is the model on the validation set -}
-\CommentTok{# correlation^2, RMSE and WMAE}
-\NormalTok{train.corr <-}\StringTok{ }\KeywordTok{round}\NormalTok{(}\KeywordTok{cor}\NormalTok{(data_joinedT$Pred.Weekly_Sales, data_joinedT$Weekly_Sales), }
-    \DecValTok{2}\NormalTok{)}
-\NormalTok{train.RMSE <-}\StringTok{ }\KeywordTok{round}\NormalTok{(}\KeywordTok{sqrt}\NormalTok{(}\KeywordTok{mean}\NormalTok{((data_joinedT$W)^}\DecValTok{2}\NormalTok{)))}
+\CommentTok{# Check how good is the model on the training set - WMAE}
 \NormalTok{train.WMAE <-}\StringTok{ }\KeywordTok{round}\NormalTok{(}\KeywordTok{mean}\NormalTok{(}\KeywordTok{abs}\NormalTok{(data_joinedT$W)))}
-\KeywordTok{c}\NormalTok{(train.corr^}\DecValTok{2}\NormalTok{, train.RMSE, train.WMAE)}
+\KeywordTok{c}\NormalTok{(train.WMAE)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## [1]    0.9604 6931.0000 2540.0000
+## [1] 2522
 \end{verbatim}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# Check how good is the model on the validation set -}
-\CommentTok{# correlation^2, RMSE and WMAE}
-\NormalTok{valid.corr <-}\StringTok{ }\KeywordTok{round}\NormalTok{(}\KeywordTok{cor}\NormalTok{(data_joinedV$Pred.Weekly_Sales, data_joinedV$Weekly_Sales), }
-    \DecValTok{2}\NormalTok{)}
-\NormalTok{valid.RMSE <-}\StringTok{ }\KeywordTok{round}\NormalTok{(}\KeywordTok{sqrt}\NormalTok{(}\KeywordTok{mean}\NormalTok{((data_joinedV$W)^}\DecValTok{2}\NormalTok{)))}
+\CommentTok{# Check how good is the model on the validation set - WMAE}
 \NormalTok{valid.WMAE <-}\StringTok{ }\KeywordTok{round}\NormalTok{(}\KeywordTok{mean}\NormalTok{(}\KeywordTok{abs}\NormalTok{(data_joinedV$W)))}
-\KeywordTok{c}\NormalTok{(valid.corr^}\DecValTok{2}\NormalTok{, valid.RMSE, valid.WMAE)}
+\KeywordTok{c}\NormalTok{(valid.WMAE)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## [1]    0.9604 6516.0000 2512.0000
+## [1] 2547
 \end{verbatim}
 
-Both data sets have very similar values, with high correlation, and not
-too high measurements of RMSE and WMAE considering the size of the
-datasets.
+As expected, the result is greater in the validation dataset, but only
+slightly bigger; and in both cases the WMAE (arround \$2,500) can be
+considered rather low - taking into account the scale of the variable.
 
-We could conclude, therefore, that this is, indeed, an accurate
-predictive model.
+Therefore, we could conclude that we managed to build a relatively
+accurate model to predict sales.
 
 \section{Conclusions}\label{conclusions}
 
 This report describes, preprocesses and analyzes a set of internal and
-external data related to the sales of a minorist retailer from the
-United States, in order to construct a precise model for sales
+external data related to the sales of a nationwide retailer from the
+United States, in order to construct an accurate model for sales
 prediction.
 
 The main conclusions reached with the interpretation of the final model
@@ -989,16 +977,15 @@ are the following:
   sales and actually the only one is the sales from the prior year.
 \item
   Contrary to our expectations, the size of stores does not seem to be a
-  good predictor
+  good predictor.
 \item
   The same conclusion is reached regarding the external factors.
 \end{itemize}
 
-Sales vary over time (for some reason not explained by the other
-predictors), and this variation must be smooth, so one year's sales seem
-not too different from the year before.
+Sales vary over time, but this variation must be smooth, so one year's
+sales seem not too different from the year before.
 
-In short, the model essentially says that in the absence of other
+In short, the final model essentially says that in the absence of other
 information, sales should be the same the next year as they were the
 previous one.
 
@@ -1013,9 +1000,9 @@ Bennett, D.A. 2001. How can I deal with missing data in my study?
 Available from:
 \url{http://doi.wiley.com/10.1111/j.1467-842X.2001.tb00659.x}.
 
-\hypertarget{ref-cambridge_business_english_dictionary_cambridge_nodate}{}
-Dictionary, C.B.E. \emph{Cambridge Business English Dictionary}
-{[}Online{]}. {[}Accessed 14 March 2018{]}. Available from:
+\hypertarget{ref-cambridge_business_english_dictionary_cambridge_2008}{}
+Dictionary, C.B.E. 2008. Cambridge Business English Dictionary.
+{[}Accessed 14 March 2018{]}. Available from:
 \url{https://dictionary.cambridge.org/dictionary/english/sales-forecast}.
 
 \hypertarget{ref-dong_principled_2013}{}
