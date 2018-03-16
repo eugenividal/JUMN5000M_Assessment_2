@@ -3,26 +3,26 @@ title: 'Understanding Data and its Environment: Report assessment'
 author: "Eugeni Vidal"
 date: "March 16, 2018"
 output:
+  word_document:
+    toc: yes
   pdf_document:
     fig_caption: yes
     keep_tex: yes
     latex_engine: pdflatex
     number_sections: yes
     toc: yes
-  word_document:
-    toc: yes
   html_document:
     df_print: paged
     toc: yes
     toc_depth: 2
     toc_float: yes
+bibliography: My library.bib
 endnote: no
 fontfamily: mathpazo
 fontsize: 11pt
 geometry: margin=1in
-bibliography: My library.bib
-biblio-style: apsr
 csl: harvard-university-of-leeds.csl
+biblio-style: apsr
 ---
 
 \pagebreak
