@@ -1,0 +1,605 @@
+---
+title: "Understanding Data and its Environment: Sales forecasting report assessment"
+author: "Eugeni Vidal"
+date: "March 15, 2018"
+output:
+  pdf_document: 
+    fig_caption: yes
+    number_sections: yes
+    toc: yes
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    df_print: paged
+  word_document:
+    toc: yes
+bibliography: My library.bib
+---
+
+\pagebreak
+
+```{r,echo=FALSE,message=FALSE,warning=FALSE}
+require(knitr)
+# Set so that long lines in R will be wrapped:
+opts_chunk$set(tidy.opts=list(width.cutoff=80),tidy=TRUE)
+```
+
+# Introduction
+
+The cambridge Dictionary describes sales forecasting as "the statement of what the amount or value of a company's sales is likely to be in the future, based on information available now about the market, past sales, etc"[@cambridge_business_english_dictionary_notitle_nodate].
+
+The increase of competition, complexity in business tasks, and the fact that nowadays circumstances, in general, tend to change more rapidly makes increasingly important and necessary for companies the use of forecasting technics for the prediction of their future prospects [@lancaster_forecasting_1985, p1].
+
+<Aim>
+This report aims to describe, pre-process and analyse a set of data based on historical sales data collected from a nationwide retailer in the U.S as well as on external factors, so as to lead to the development of an accurate predictive model. 
+
+<Method>
+The methodology followed is divided into 7 different steps, from describing the data to building and assessing the model developed (see figure 1). Notice that although each step is taken in order, the whole process has to be understood as a set of nested loops rather than a straight line.
+
+![Methodology diagram \label{}](images/Methodology diagram.jpg)
+
+<br>
+
+The whole process has been done using the open software R and it is reproducible based on code available at https://github.com/eugenividal/Understanding-data-report.
+
+This report is written as clearly and easily as possible, with the pretense that any person, without much prior knowledge in forecasting or in the R software, can understand it. For this purpose, the document describes not only the statistical process followed, but also the code used with the software R. 
+
+<br>
+
+# Data description
+
+First of all, we will install the required R packages to carry out the project and then load their libraries.  
+
+```{r,  message=FALSE, cache=FALSE}
+# Install packages
+#install.packages("tidyverse")
+#install.packages("VIM")
+#install.packages("dplyr")
+#install.packages("psych")
+#install.packages("lubridate")
+#install.packages("caret")
+#install.packages("car")
+
+# Activate libraries
+library(tidyverse)
+library(VIM)
+library(dplyr)
+library(psych)
+library(lubridate)
+library(caret)
+library(car)
+```
+
+Secondly, we will load the data into the R environment.
+
+```{r, message=FALSE, cache=FALSE}
+# Load data
+stores = read_csv("data/stores.csv")
+features = read_csv("data/features.csv")
+test = read_csv("data/test.csv")
+train = read_csv("data/train.csv")
+```
+
+<br>
+
+We are provided with 4 data sets (stores, features, train, and test). All of them with the same format: comma-separated values (csv). 
+
+Below a brief description of each of the datasets and their variables:
+
+**stores.csv (45 obs. of 3 variables)**
+
+- Store: the anonymised store number <numeric> 
+- Type: tore type, A: supercentre, B: superstore, C: supermarket <character>
+- Size (sq ft): store size (in square feet) <numeric>
+
+**features.csv (8,190 obs. of 12 variables)**
+
+- Store: the anonymised store number <numeric>
+- Date:	the week with the dated Friday <character>
+- Temperature: average temperature in the region <numeric>
+- Fuel_Price: cost of fuel in the region <numeric>
+- Promotions:	anonymised data related to promotions, mainly price reductions that the retailer is running <numeric>
+- CPI: the consumer price index <numeric>
+- Unemployment: the unemployment rate <numeric>
+- IsHoliday: whether the week is a special holiday week <boolean>
+
+**train.csv (421,570 obs. of 5 variables)**
+
+- Store: the anonymised store number <numeric>
+- Department: the anonymised department number <numeric>
+- Date: the week with the dated Friday <character>
+- Weekly_Sales: sales for the given department in the given store <numeric>
+- IsHoliday: whether the week is a special holiday week <boolean>
+
+**test.csv (115,069 obs. of 5 variables)**
+
+The validation dataset has the same fields as the train.csv, except we need to predict the weekly sales for each triplet of store, department, and date from 02/11/2012 to 26/07/2013.
+
+<br>
+
+Variables of each dataset have been explored through counts, summary statistics, crosstabulation and visualisations in order to identify potential inconsistences or problems.
+
+The main issues detected are briefly described below.
+
+**1. Inconsistent data encoding**. In the stores dataset, some stores might be wrongly classified. Two stores under 50,000 sq ft are coded as type B and other two as type A, when presumably small size stores (<50000 sq ft) should be type C. 
+
+```{r, include=FALSE, cache=FALSE}
+# Crosstab Size and Type store data set
+crosstab_Size_Type <- table(stores$Type, stores$`Size (sq ft)`)
+# Print first 10 rows of mydata
+head(crosstab_Size_Type, n=10)
+```
+
+**2. Missing values**. In the features dataset, 24,040 values are missing, almost 50% in the promotion variables and 7% in the `CPI` and `Unemployment` ones. With the function of the VIM package `aggr()` we can visualise them for each variable alone and for each combination of variables.
+
+```{r , fig.cap=c("Missing values"), fig.height=3.5, fig.width=5.5, echo=TRUE}
+# Plot missing values
+aggr(features, prop=FALSE, col = "grey", cex.lab = 0.85, cex.axis = 0.65, cex.main = 0.85)
+```
+
+There are no missing values in the rest of datasets.
+
+**3. Negative values**. Some of the values in the promotions variables are negative: 4 in `Promotion1`, 25 in `Promotion2`, 13 in `Promotion3`, and 2 in `Promotion5`. Also `Weekly Sales` in the train dataset has some negative values (1286 out of 421571 (0.3%)).
+
+**4. Class type errors**. The  class of the `Date` variable within the train, features and test datasets is character instead of date. This doesn't allow to sort the data properly. Also in terms of class, it would be useful to have the variable IsHoliday in numeric type (1 or 0) instead of boolean (true or false). 
+
+**5. Data not normally distributed**. Finally, to mention that the data in some variables is not normally distributed. `Weekly_Sales` data is clearly left-skewed (see histogram below), `Size_(sq ft)` rather comb, and `Fuel_Price` and `CPI` bimodal. 
+
+```{r,include=FALSE, cache=FALSE}
+# Scientific notation Off
+options(scipen=999)
+```
+
+```{r, echo=TRUE, fig.height=3.5, fig.width=5.5, fig.cap=c("Weekly Sales histogram")}
+# Plot a histogram
+hist(train$Weekly_Sales, cex.lab = 0.85, cex.axis = 0.85, cex.main = 0.85, col = "grey", 
+main=NULL, xlab="Weekly Sales", ylab="Frequency")
+```
+<br>
+
+**6. Extreme values**
+
+Some variables present observations that could be considered as outliers or extreme. An example are the points that statnd out in the following boxplot of weekly Sales by date.
+
+```{r, echo=TRUE, fig.height=3.5, fig.width=5.5, fig.cap=c("Boxplot Weekly Sales ~ Date")}
+
+# For categorical variable
+boxplot(train$Weekly_Sales ~ train$Date, data=train, col = "grey", main=NULL, cex.lab = 0.85, cex.axis = 0.85, cex.main = 0.85, xlab="Date", ylab="Weekly Sales") 
+```
+
+
+```{r,include=FALSE, cache=FALSE}
+# Scientific notation On
+options(scipen=001)
+```
+
+<br>
+
+# Data joining
+
+The next step is to join the stores, train and features datasets in a single one. This will allow us to make the analysis simpler and more straightforward. 
+
+The test dataset will be left aside to gauge the effectiveness of the models once build.
+
+To performance the join, we apply a left join. We chose this type of join because we want to end up having the same number of rows as the train dataset which contains the variable to predict `Weekly_Sales`.  
+
+First, we link the stores dataset with the train one, using the common attribute `Store`; then the resultant dataset with the features dataset, using the common attributes `Store`, `Date` and `IsHoliday`. 
+
+```{r}
+# Join store-level data onto training dataset (so we know size and type)
+data_joined = left_join(train, y= stores)
+# Join train_joined onto features dataset (so we know the rest of variables)
+data_joined = left_join(data_joined, y= features)
+```
+
+The result is a data frame with 421,570 observations of 16 variables. Notice that 1,755 observations don't match between train and features. This is because we did a left join and the features datasets collects observations for a longer period than the train dataset. 
+
+<br>
+
+# Cleaning and fixing problems with the data
+
+In this section, the inconsistencies or potential problems identified in the section data description are cleaned or fixed. 
+
+## Resolving inconsistent data encoding
+
+It is assumed that the type of store is based on size and consequently, all stores under 50000 sq ft are recoded as C type. This way the potential inconsistency of 4 stores under 5000 sq ft coded as type A and B are solved.
+
+```{r}
+# Recode `stores$Type` based on `stores$Size (sq ft)`
+data_joined$Type[(data_joined$`Size (sq ft)`<50000)] <- "C"
+data_joined$Type[(data_joined$`Size (sq ft)`>=50000) & (data_joined$`Size (sq ft)`
+<150000)] <- "B"
+data_joined$Type[(data_joined$`Size (sq ft)`>=150000)] <- "A"
+```
+
+## Dealing with missing values
+
+There are several approaches to deal with this problem: 
+
+- delete the cases containing missing data (listwise deletion), or 
+
+- replace (impute) the missing values with reasonable alternative data values [@kabacoff_r_2011, p353].
+
+Deciding how to treat them will depend on the estimation of which approach will produce the most reliable and accurate results [@kabacoff_r_2011, p.354].
+
+The amount of missing data is an important factor in this sense. There is no established cutoff from the literature regarding an acceptable percentage of missing data in a dataset for valid statistical inferences [@dong_principled_2013]. Schafer [-@schafer_multiple_1999] argues that a missing rate of 5% or less is inconsequential, while Bennett [-@bennett_how_2001] considers that more than 10% is likely to biased the statistical analysis.
+
+Given the high percentage of missing values in the promotion variables (around 50%), we will delete them and will not consider in the statistical analysis.
+
+```{r}
+# Delete promotions
+data_joined$Promotion1 <- NULL
+data_joined$Promotion2 <- NULL
+data_joined$Promotion3 <- NULL
+data_joined$Promotion4 <- NULL
+data_joined$Promotion5 <- NULL
+```
+
+The missing data previously detected in the `CPI` and `Unemployment` variables disappeared when the datasets were joined With the left_join.
+
+## Interpretation of negative values
+
+After analyzing the negative values of the `Weekly_Sales` variable, we have concluded that they are returned products from previous weeks. So, no changes will be done in this sense. 
+
+The rest of the negative values were detected in the promotions variables that we just deleted, so they are no longer a problem.
+
+## Data type conversion
+
+In order to make the variable `IsHoliday` more manageable, we will convert the data type into numeric using the basic function `as.numeric()`.
+
+```{r}
+# Convert IsHoliday to numeric
+data_joined$IsHoliday <- as.numeric(data_joined$IsHoliday)
+```
+
+We will also convert the `Date` class from character into date with the `mdy ()` function of the lubridate package.
+
+```{r message=FALSE}
+# Convert date info to date format 'dmy'
+data_joined$Date <- dmy(data_joined$Date)
+```
+
+## Consideration of data normalisation<sup></sup>^[The variables were normalised using log 10 during the process of building the model, but the results of the assesssment didn't imporve the model. This step is not explained in detail due to the limitation of words in the report]
+
+It might be useful to have the errors normally distributed with constant variance in order to produce prediction intervals, although it is not considered necessary for forecasting [@hyndman_forecasting:_2017]. 
+
+So, at this stage at least, all the variables will remain with their original distribution. It could be preferable since the model would be more understandable and interpretable1. 
+
+## Consideration of extreme values<sup></sup>^[The extremes values were checked using a multivariate model apporach during the process of building the model, but their cleaning didn't influence on the  regression model. So, we opt for keeping them. This step is not explained in detail due to the limitation of words in the report]
+
+No changes have been done in terms of extreme values at this stage. This is cheked during the process of building the model using a multivariate approach.
+
+<br>
+
+# Data transformation
+
+Once the inconsistencies or potential problems are fixed, some transformations are carried out in order to prepare the dataset for building the model.
+
+First, we will create a week number of year column in order to compare them.
+
+```{r}
+# Create a week number of the year variable
+data_joined$WeekNum <- as.numeric(format(data_joined$Date+3,"%U"))
+```
+
+Secondly, We will create a year variable.
+
+```{r}
+# Create a year variable
+data_joined$year = lubridate::year(data_joined$Date)
+```
+
+Finally, we will create a variable of the previous year Weekly sales because the current year sales can be a good predictor of the next year's sales [@zoltners_complete_2001, 342]. 
+
+```{r, echo=TRUE, fig.cap=c("Correlation Weekly Sales ~ Weekly Sales"), fig.height=3.5, fig.width=5.5}
+# Create a previous year sales variable
+prevyear = select(data_joined, year, WeekNum, Dept, Store, prev_Weekly_Sales = Weekly_Sales)
+prevyear$year = prevyear$year + 1
+# Create variable Sales previous year
+data_joined = left_join(data_joined, prevyear)
+```
+
+The following figure shows how highly correlated are both varibles: the weekly sales variable of the previous year that we just created and the weekly sales variable that we already had. 
+
+```{r, echo=TRUE, fig.height=3.5, fig.width=5.5, fig.cap=c("Correlation Weekly Sales ~ Previous year Weekly Sales")}
+# Plot correlation Weekely Sales ~ Previous Year Weekly Sales
+plot(data_joined$Weekly_Sales, data_joined$prev_Weekly_Sales,col = "grey", main=NULL, 
+     xlab="Weekly Sales", ylab="Previous year Weekly Sales")
+```
+
+<br>
+
+Due to the fact that the new variable is based on sales of a previous year, there will have a year of missing values. 
+
+We will handle with this applying again listwise deletion. This will reduce the sample size by 38% (from 421,570 to 261,541) which could reduce statistical power of our model dataset. However, an approach with the entire dataset could bias the results of the subsequent analysis [@bennett_how_2001, p.464].
+
+```{r,include=FALSE, cache=FALSE}
+#data_joined$prev_Weekly_Sales <- #as.numeric(impute(data_joined$prev_Weekly_Sales, mean))
+```
+
+```{r,include=FALSE, cache=FALSE}
+# Delete rowns with NA's
+data_joined = na.omit(data_joined)
+```
+
+```{r,include=FALSE, cache=FALSE}
+# Match holiday weeks to holiday weeks. Adjust for Easter and adjust for the different Christmas week 
+
+```
+
+```{r,include=FALSE, cache=FALSE}
+# Because of week mismatches between years take average of previous years sales 
+
+```
+
+```{r, include=FALSE, cache=FALSE}
+# Reorganise the columns
+data_joined <- data_joined[c(2,1,6,7,3,4,14,8,9,10,11,12,5)]
+```
+
+```{r, include=FALSE, cache=FALSE}
+# Glance at the first 6 rows of the model dataset
+head(data_joined)
+```
+<br>
+
+# Data partition
+
+In this section, the model dataset data_joined is divided into two parts. The first one, the training set (data_joinedT), will be used to build the model; the second one, the validation set (data_joinedV), to adjust it. 
+
+<The test set that we put aside before, will be used to gauge the effectiveness of the models when applied to unseen data>. 
+
+<why 80%? (reference needed)>
+
+For the partition, we will use the `caret` package.
+
+```{r message=FALSE}
+#subset the data into train and test
+n = nrow(data_joined)
+trainIndex = sample(1:n, size = round(0.8*n), replace=FALSE)
+data_joinedT = data_joined[trainIndex ,]
+data_joinedV = data_joined[-trainIndex ,]
+```
+
+<br>
+
+# Building the model
+
+To build the model, we first choose the forecasting technique, then analyse which predictors are more influencal for the prediction, and finallly obtain a specific model, which best explain how sales will be in the future.
+
+## The choice of the technique
+
+The choice of forecasting technique is a major consideration. There are many different methods to apply, from pure guesswork to highly complex mathematical analysis [@lancaster_forecasting_1985, p.15].
+
+Three factors are determinant on the decision: accuracy, time-scale and cost [@lancaster_forecasting_1985, p.37-38].
+
+In this case, we will opt for a multiple simple regression approach due to two fundamental reasons:
+
+- it is probably the most understandable and accessible forecasting technique, and;
+
+- it is quicker and cheaper as well.
+
+Multiple linear regression is described as an statistical technique for "predicting a quantitative response (or dependent) variable from two or more explanatory (or independent) variables [@kabacoff_r_2011, p.175].
+
+Its general form is:
+
+<center><span style="font-size:larger;">*y~i~ = B~0~ + B~1~x~1~,~i~ + B~2~x~2~,~i~+...+ B~k~x~k~,~i~ + e~i~,*</span></center>
+
+Where,
+
+- <span style="font-size:larger;">*y~i~*</span></center> is the dependent variable (or variable to be forecast)
+- <span style="font-size:larger;">*x~i~,~i~...x~k~,~i~*</span></center> are the independent variables (or predictors)
+- <span style="font-size:larger;">*B~0~*</span></center> is the y-intercept
+- <span style="font-size:larger;">*B~1~,...B~k~*</span></center> are the coefficients that measure the marginal effects of the predictors
+- <span style="font-size:larger;">*e*</span></center> are the residuals (a random variable that captures the fact that regression models typically do not fit the data perfectly).
+
+In our model, Weekly Sales would be the variable to be forecast and the rest of variables the predictors to be observed.
+
+## The selection of the predictors
+
+To build the model we will performe a stepwise selection of variables by backwards elimination. This means we will start fitting the model  with all the candidate variables, and will progressively drop those which are not suitable or not contribute to the sales prediction.
+
+To fit the *full model* we will use the R basic function `lm ()`. 
+
+```{r}
+# Fit the model (1)
+fit <- lm(Weekly_Sales ~ IsHoliday + Type + `Size (sq ft)`+ prev_Weekly_Sales + Temperature + Fuel_Price + CPI + Unemployment, data= data_joinedT)
+summary(fit) # R2=96.72%, F=686500
+```
+
+At a glance from the summary of the fit we can deduce that the model looks good:
+
+- All predictors have a low p-value, what indicates that they can be significant.
+
+- The R-squared is very high (96.72%) which says how well the model explains the variation in the data.
+
+- 
+
+However, additional tests are needed to decide the most appropiate and accurate model. 
+
+### Multiple colliniarity
+
+We need to check if among the independent or predictor variables there is any collinearity. For this, we will use the basic function `vif ()`.
+
+For vif=1 there is no correlation, for 1<VIF<5 there is a moderate correlation, and for vif over 5 means the correlation is high.
+
+```{r}
+# Variance Inflation Factor
+vif(fit)
+```
+
+`Type` and `Size (sq ft)` present a high colliniarity level. So we drop first `Type` and refit the model.
+
+```{r}
+# Refit the model (2) - drop Type
+fit <- lm(Weekly_Sales ~ IsHoliday + `Size (sq ft)`+ prev_Weekly_Sales + Temperature + Fuel_Price + CPI + Unemployment, data= data_joinedT)
+summary(fit) # R2=96.72%, F=881600
+```
+
+The R squared went slighly down because the variable Type probably counted twice in the system, but it is almost the same. 
+
+If we check the vif again we can sse that this time all variables have no colliniarity of very low level of colliniarity.
+
+```{r}
+# Variance Inflation Factor
+vif(fit)
+```
+
+This makes sense as the Type of stores must be based on the Size. So, once we drop `Type`, the level of `Size (sq ft)` drops to normal. 
+
+### Variables with no contribution
+
+Next we eliminate one per one each variable that although have a good p-value could contribute more or less to the model. So, we can see that if we elmiminate `IsHoliday`,`Temperature`, `Fuel_Price`, `CPI` and `Unemployment` the model dint go any worse, R squered is insignificatly lower, and makes the model simpler. 
+
+```{r,include=FALSE, cache=FALSE}
+# Refit the model (3) - drop CPI
+fit <- lm(Weekly_Sales ~ IsHoliday + `Size (sq ft)`+ prev_Weekly_Sales + Temperature + Fuel_Price + Unemployment, data= data_joinedT)
+summary(fit)
+```
+
+```{r,include=FALSE, cache=FALSE}
+# Refit the model (4) - drop Temperature
+fit <- lm(Weekly_Sales ~ IsHoliday + `Size (sq ft)`+ prev_Weekly_Sales + Fuel_Price + Unemployment, data= data_joinedT)
+summary(fit)
+```
+
+```{r,include=FALSE, cache=FALSE}
+# Refit the model (5) - drop Fuel PRice
+fit <- lm(Weekly_Sales ~ IsHoliday + `Size (sq ft)`+ prev_Weekly_Sales + Unemployment, data= data_joinedT)
+summary(fit)
+```
+
+```{r,include=FALSE, cache=FALSE}
+# Refit the model (6) - IsHolidays
+fit <- lm(Weekly_Sales ~ `Size (sq ft)`+ prev_Weekly_Sales  + Unemployment, data= data_joinedT)
+summary(fit)
+```
+
+
+```{r}
+# Refit the model (3) - drop Unemployment
+fit <- lm(Weekly_Sales ~ `Size (sq ft)`+ prev_Weekly_Sales, data= data_joinedT)
+summary(fit) # R2=96.71%, F=3073000
+```
+
+
+```{r}
+# Refit the model (4) - drop Size
+fit <- lm(Weekly_Sales ~ prev_Weekly_Sales, data= data_joinedT)
+summary(fit) # R2=96.70%, F=6092000
+```
+
+## The final model
+
+The final model is curisoty a simple liniar regression Weekly Sales ~ Prev_Weekly_Sales.
+
+```{r, echo=TRUE, fig.height=3.5, fig.width=5.5, fig.cap=c("Weekly Sales histogram")}
+# Refit the model (3)
+fit <- lm(Weekly_Sales ~ prev_Weekly_Sales, data= data_joinedT)
+plot(fit)
+```
+
+``````{r,include=FALSE, cache=FALSE}
+# Eliminate extreme values
+cutoff <- 4/((nrow(data_joinedT)-length(fit$coefficients)-2)) 
+# Cook's D plot, cutoff as 4/(n-k-1)
+plot(fit, which=4, cook.levels=cutoff)                       
+# identify D values > cutoff
+plot(fit, which=5, cook.levels=cutoff)
+data_joinedT <- data_joinedT[-which(rownames(data_joinedT)    
+# Row names discovered in 2 rounds
+    %in% c("559156", "148334", "57554")),]  
+```
+
+``````{r,include=FALSE, cache=FALSE}
+# Refit the model (4) 
+fit <- lm(Weekly_Sales ~ prev_Weekly_Sales, data= data_joinedT)
+summary(fit) #R2 = 96.67%
+```
+
+
+``````{r,include=FALSE, cache=FALSE}
+# Eliminate extreme values
+cutoff <- 4/((nrow(data_joinedT)-length(fit$coefficients)-2)) 
+# Cook's D plot, cutoff as 4/(n-k-1)
+plot(fit, which=4, cook.levels=cutoff)                       
+# identify D values > cutoff
+plot(fit, which=5, cook.levels=cutoff)
+data_joinedT <- data_joinedT[-which(rownames(data_joinedT)    
+# Row names discovered in 2 rounds
+    %in% c("55915", "57553", "148332")),] 
+```
+
+``````{r,include=FALSE, cache=FALSE}
+# Refit the model (2) 
+fit <- lm(Weekly_Sales ~ prev_Weekly_Sales, data= data_joinedT)
+summary(fit) #R2 = 96.67%
+```
+
+In the first plot We can see that the model is clearly liniar in the first image. We can see that there are some extreme values, that we can clean to see it it improves.
+
+In the second one we can see that the have a heavy tailed we have a problem with the extrems. So, the observations should be alinegned with the line. Normal Q-Q plots that exhibit this behavior usually mean your data have more extreme values than would be expected if they truly came from a Normal distribution.
+
+The third one explains...
+
+Finally the last one...
+
+<br>
+
+# The model assessment
+
+The last step of the process is to check the model to know if it is accurate or not. For the assessment we will use the validation sample of the data previously created.
+
+First we will create a column of the predicted Sales values according to the model in the training set and in the validation set.
+
+```{r}
+# Find all predicted values for both the training set and the validation
+data_joinedT$Pred.Weekly_Sales <- predict(fit, 
+    newdata = subset(data_joinedT, select=c(prev_Weekly_Sales)))
+data_joinedV$Pred.Weekly_Sales <- predict(fit, 
+    newdata = subset(data_joinedV, select=c(prev_Weekly_Sales)))
+```
+
+Second we will chek how good is the model of the training set suing RME and MAE.
+
+```{r}
+
+# Check how good is the model on the training set - correlation^2, RME and MAE
+train.corr <- round(cor(data_joinedT$Pred.Weekly_Sales, data_joinedT$Weekly_Sales), 2)
+train.RMSE <- round(sqrt(mean((data_joinedT$Pred.Weekly_Sales -  data_joinedT$Weekly_Sales)^2)))
+train.MAE <- round(mean(abs(data_joinedT$Pred.Weekly_Sales - data_joinedT$Weekly_Sales)))
+c(train.corr^2, train.RMSE, train.MAE)
+```
+
+Finally, the same measures are applied to the validation set, and the result is a the following:
+
+```{r}
+# Check how good is the model on the validation set - correlation^2, RME and MAE
+valid.corr <- round(cor(data_joinedV$Pred.Weekly_Sales, data_joinedV$Weekly_Sales), 2)
+valid.RMSE <- round(sqrt(mean((data_joinedV$Pred.Weekly_Sales - data_joinedV$Weekly_Sales)^2)))
+valid.MAE <- round(mean(abs(data_joinedV$Pred.Weekly_Sales - data_joinedV$Weekly_Sales)))
+c(valid.corr^2, valid.RMSE, valid.MAE)
+```
+
+<br>
+
+# Conclusions
+
+This report describes, preprocesses and analyzes a set of internal and external data related to the sales of a minoist from the United States, in order to construct a precise multiple linear regression model for sales prediction.
+
+The main conclusions reached with the interpretation of the final model are the following:
+
+- From all the information available, the most powerful predictor of sales is the sales from the prior year.
+- The second better was the size of the store.
+- The influence of external factors is inexistent. 
+
+Sales vary over time (for some reason not explained by the other predictors), and this variation is smooth - so one days sales are not too different from the day before or the day after.
+
+In short, the model essentially says that in the absence of other information, sales should be the same as they were yesterday. 
+
+Further work. The model could have been improved if the holidays and weeks were line up between years. Time constrain and the fact that all this were new to us, do this as further work.
+
+The analysis of the final model with all the data normalised would have been also interesting.
+
+# References

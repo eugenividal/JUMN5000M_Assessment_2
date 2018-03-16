@@ -1,0 +1,300 @@
+---
+title: "Understanding Data and its Environment: Report assessment"
+author: "Eugeni Vidal"
+date: March 15, 2018
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    df_print: paged
+  word_document: default
+  pdf_document: default
+  slidy_presentation:
+bibliography: references.bib
+---
+
+# 1. Introduction
+
+<Aim>
+This report aims to describe, pre-process and analyse a set of data based on historical sales data collected from a nationwide retailer in the U.S, so as to lead to the development of accurate predictive models. 
+
+<Method>
+The whole process is divided into eight different steps, from describing the data to buiding and assessing the models proposed. Each step is taken in order, although it should be understood as a set of nested loops rather than a straight line (see figure 1).
+
+![Figure 1. Methodology diagram](images/Methodology diagram.png)
+
+The whole process has been done using the software R and it is reproducible based on code available at https://github.com/eugenividal/Understanding-data-report.
+
+# 2. Step 1: data description
+
+We have been provided with 4 data sets (stores, features, train, and test). All of them with the same format: comma-separated values (csv). 
+
+<Describe the type of each variable (categorical, numeric, etc)?>
+
+**stores.csv (45 obs. of 3 variables)**
+
+- Store: the anonymised store number <numeric> 
+- Type: tore type, A: supercentre, B: superstore, C: supermarket <character>
+- Size: store size (in square feet) <numeric>
+
+**features.csv (8,190 obs. of 12 variables)**
+
+- Store: the anonymised store number <numeric>
+- Date:	the week with the dated Friday <character>
+- Temperature: average temperature in the region <numeric>
+- Fuel_Price: cost of fuel in the region <numeric>
+- Promotions:	anonymised data related to promotions, mainly price reductions that the retailer is running <numeric>
+- CPI: the consumer price index <numeric>
+- Unemployment: the unemployment rate <numeric>
+- IsHoliday: whether the week is a special holiday week <boolean>
+
+**train.csv (421,570 obs. of 5 variables)**
+
+- Store: the anonymised store number <numeric>
+- Department: the anonymised department number <numeric>
+- Date: the week with the dated Friday <character>
+- Weekly_Sales: sales for the given department in the given store <numeric>
+- IsHoliday: whether the week is a special holiday week <boolean>
+
+**test.csv (115,069 obs. of 5 variables)**
+
+The validation dataset has the same fields as the train.csv, except we need to predict the weekly sales for each triplet of store, department, and date from 02/11/2012 to 26/07/2013.
+
+<br>
+
+After loading the data in the R environment, variables of each dataset have been explored through counts, summary statistics, crosstabulation and visualisations.
+
+The main inconsistencies or potential problems identified are the following:
+
+1. In the stores dataset, there are **potential inconsistences** in the classification of some stores. Two stores under 50,000 sq ft are classified as type B and other two as type A. Pressumibly small size stores should be classified as type C. In addition, some stores are exactly the same size: three are 39690 sq ft, three 39910, and two 203819.
+
+```{r}
+# crosstab Size and Type
+mytable <- table(stores$Size, stores$Type)
+# print first 10 rows of mydata
+head(mytable, n=10)
+```
+
+2. In the features dataset, there are 24040 **Missing values**, around 50% in each of the promotions and 585 in the `CPI`, `Unemployment` and `IsHoliday`columns. To know how many NA we have we have used the following code:
+
+```{r}
+# Count number of TRUEs
+sum(is.na(features))
+# Find mising values
+summary(features)
+```
+
+3. Some of the figures in the promotions variables are **negative values**: 4 in `Promotion1`, 25 in `Promotion2`, 13 in `Promotion3`, and 2 in `Promotion5`. In the train dataset, also some values within the `Weekly Sales` variable are negative (1286 of 421571 (0.3%)).
+
+4. The  **class type** of the `Date` variable within the train, features and test datasets is character instead of date. This doesn't allow to sort the data properly. Also in terms of class, it would be useful to have the variable IsHoliday in numeric type (1 or 0) instead of boolean (true or false). This will make the analysis process easier.
+
+5. Finally, the dates are all given in an English date **format**, despite being from an American company. It is important to ensure that variables are formatted in the same way in in order to give consistency. 
+
+This exercise of data exploration is fundamental for the usefulness of later analysis (Berry, 2004, p.65). All these problems could potentially have an impact on prediction if it is not dealt with in an appropriate way (see section 4).
+
+# 3. Step 2: data integration
+
+The next step is to join the stores, train and features datasets in a single one. The test dataset will be left aside to gauge the effectiveness of the models once build.
+
+To performance the join, we use the `dplyr` package and the type of join will be left. We chose a left join because we understand the train dataset as the principal and want to end up having the same number of observation as this dataset.  
+
+First, we link the stores dataset with the train one, using the common attribute `Store`; then the resultant dataset with the features dataset, using the common attributes `Store`, `Date` and `IsHoliday`. See the code bellow.
+
+```{r}
+library(dplyr)
+# join store-level data onto training dataset (so we know size and type)
+train_joined = left_join(train, y= stores)
+# Join train_joined onto features dataset (so we know the rest of variables)
+train_joined = left_join(train_joined, y= features)
+```
+
+The result is a data frame that contains 421,570 observations of 17 variables. Notice that 1,755 observations don't match between train and features. This is because we did a left join and the features datasets collect data until 2013-07-26 while the train dataset only until 2013-07-26. This way, we leave behind 1,755 observations and the 585 NA's previously detected in `CPI`, `Unemployment` and `IsHoliday`.
+
+# 4. Step 3: fixing the problems with the data
+
+In this section we will fix inconsistencies or potential problems detected in the section data description.
+
+<What is or isn’t a problem varies with the data mining technique used (Berry, 2004, p.72).> 
+
+### Inconsistent Data Encoding
+
+We will assume that the type of store is based on size and consequently will recode store As and Bs under 50000 sq ft as C Type. 
+
+```{r}
+# recode stores type based on size
+train_joined$Type[(train_joined$Size<50000)] <- "C"
+train_joined$Type[(train_joined$Size>=50000) & (train_joined$Size<150000)] <- "B"
+train_joined$Type[(train_joined$Size>=150000)] <- "A"
+```
+
+However, we understand reasonable that certain stores have exactly the same size. The company could have built stores from scratch, taking others as a model. 
+
+### Missing values
+
+The promotion variables have almost 50% of their values N.A, so consequently we will not consider them <(reference needed)>. 
+
+```{r}
+# remove promotion columns
+train_joined$Promotion1 <- NULL
+train_joined$Promotion2 <- NULL
+train_joined$Promotion3 <- NULL
+train_joined$Promotion4 <- NULL
+train_joined$Promotion5 <- NULL
+```
+
+### Negative values
+
+The negative values in `Weekly Sales` could be attributed to periods of economic losses <(reference needed)>. 
+
+### Class Type
+
+We will change the class type of `IsHoliday` variable into numeric using the general function `as.numeric()`.
+
+```{r}
+# convert IsHoliday to numeric
+train_joined$IsHoliday <- as.numeric(train_joined$IsHoliday)
+```
+
+To convert the date information into date we will use the package `lubridate` and the function `mdy ()`.
+
+```{r message=FALSE}
+library(lubridate)
+# convert date info in format 'dmy'
+train_joined$Date <- dmy(train_joined$Date)
+```
+
+### Consistent formats
+
+Finally, to give consistency to the dataset we will convert the date from English format (dmy) to American(mdy).
+
+# 5. Step 4: data transformation
+
+Once the inconsistencies or potential problems are fixed, we will make some transformations in order to prepare the dataset for building the predictive model.
+
+### Creating ratios or other combinations of variables
+
+First, we include a Week Number of the year colum. 
+
+```{r}
+# Week number of the year
+train_joined$WeekNum <- as.numeric(format(train_joined$Date+3,"%U"))
+```
+
+Second, we create a unique identifier column by concatenating store number and department type.
+
+```{r}
+# create a unic identifier
+train_joined$Id <- as.character(paste(train_joined$Store, train_joined$Dept, sep = "-"))
+```
+
+<Create a variable for instance of sales/square meters?>
+
+### Reordrering the columns
+
+Finally, we reorder the columns the way we like.
+
+```{r}
+# move location of columns
+train_joined <- train_joined[c(13,2,1,6,7,3,12,4,5,8,9,10,11)]
+```
+
+Let's have a small glimpse of how the model dataset looks like.
+
+```{r}
+# print first 6 rows of mydata
+head(train_joined)
+```
+ 
+# 6. Step 5: data partition
+
+In this section the model set is divided into two parts. The first one, the training set (train_joined.train), will be used to build the initial models;and the second one, the validation set (train_joined.validation), to adjust them. The test set that we put aside before, will be used to gauge the effectiveness of the models when applied to unseen data. 
+
+<why 80%? (reference needed)>
+
+For the partition we will use the `caret` package.
+
+```{r message=FALSE}
+library(caret)
+# Subset the data into train and test
+n = nrow(train_joined)
+trainIndex = sample(1:n, size = round(0.8*n), replace=FALSE)
+train_joined.train = train_joined[trainIndex ,]
+train_joined.validation = train_joined[-trainIndex ,]
+```
+
+We can check that the data has been subseted with the following command:
+
+```{r}
+ls()
+```
+
+# 7. Step 6: identify the key factors affecting sales
+
+The next step is to identify which variables are more relevant. This  is fundamental in developing more complex models.
+
+To identify underlying patterns, first, we construct a time series plot. All graphs data visualization will be done with the `ggplot` package.
+
+```{R}
+library(ggplot2)
+# Plot sales per each of the department
+ggplot(train_joined,aes(x= Date, y= Weekly_Sales)) + geom_point(aes(color=Dept))+ labs(title = "Sales per store department", x = "Date", y = "Sales", color = "Department")
+
+```
+
+```{R}
+# Plot sales per type of store
+ggplot(train_joined,aes(x= Date, y= Weekly_Sales)) + geom_point(aes(color=Type))+ labs(title = "Sales per store department", x = "Date", y = "Sales", color = "Type of store")
+
+```
+
+Several types of data patterns can be distinguished, including a horizontal pattern, a trend pattern, and a seasonal pattern. 
+
+The graphs look for possible correlation between the dependent variable Weekly Sales and the rest of independevariables
+
+```{R}
+# Plot weekly sales vs CPI
+ggplot(train_joined,aes(x= CPI, y= Weekly_Sales)) + geom_point(aes(color=Type)) +stat_summary(fun.data=mean_cl_normal) + 
+  geom_smooth(method='lm') + labs(title = "weekly sales vs CPI", x = "Date", y = "Sales", color = "Type of store")
+```
+
+```{r}
+# Plot weekly sales vs Unemployment
+ggplot(train_joined,aes(x= Unemployment, y= Weekly_Sales)) + geom_point(aes(color=train_joined$Type))+stat_summary(fun.data=mean_cl_normal) + 
+  geom_smooth(method='lm')
+```
+
+```{R}
+# Plot weekly sales vs Temperature
+ggplot(train_joined,aes(x= Temperature, y= Weekly_Sales)) + geom_point(aes(color=train_joined$Type)) + geom_smooth()
+```
+ 
+There is no clear correlation between the varibles previously graphed. BUt there is correlation between...
+
+Correlation matrix between all of our numerical features?
+
+# 8. Step 7: build the models
+
+After identified a number of input variables for predicting the output, different predictive models, such as regression models, NN, can be easily implemented through using data mining software. 
+
+### Regression
+
+We use the `lm()` function to do a linear regression.
+
+```{r}
+m1 = lm(Weekly_Sales ~ Dept + Store + Type + Size + WeekNum + IsHoliday + Temperature + Fuel_Price + CPI + Unemployment, data = train_joined)
+summary (m1)
+
+```
+
+# 9. Step 8: assess the models
+
+In this section we determine whether or not the models are working.
+
+# 10. Conclusions
+
+Mong others, we should, in the conclusions, report on the limitations of the data or what future studies of the same topic might need to look for.
+
+
+# References
+

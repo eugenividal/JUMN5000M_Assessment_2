@@ -1,0 +1,251 @@
+---
+title: "Understanding Data and its Environment: Report assessment"
+author: "Eugeni Vidal"
+date: March 15, 2018
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    df_print: paged
+  word_document: default
+  pdf_document: default
+  slidy_presentation:
+bibliography: references.bib
+---
+
+# 1. Introduction
+
+<Aim>
+This report aims to describe, pre-process and analyse a set of data based on historical sales data collected from a nationwide retailer in the U.S and several external factors, so as to lead to the development of accurate predictive models. 
+
+<Method>
+The methodology is divided into six different steps, from describing the data to building and assessing the models developed. Each step is taken in order, although the whole process has to be understood as a set of nested loops rather than a straight line (see figure 1).
+
+![**Figure 1. Methodology diagram**](images/Methodology diagram.png)
+
+The whole process has been done using the software R and it is reproducible based on code available at https://github.com/eugenividal/Understanding-data-report.
+
+# 2. Activate libraries and load data 
+
+```{r, include=FALSE, cache=FALSE}
+# install.packages("tidyverse")
+# install.packages("dplyr")
+# install.packages("psych")
+# install.packages("lubridate")
+# install.packages("caret")
+# install.packages("car")
+
+library(tidyverse)
+library(dplyr)
+library(psych)
+library(lubridate)
+library(caret)
+library(car)
+```
+
+```{r, include=FALSE, cache=FALSE}
+# load data
+source("code/load-data.R")
+```
+
+# 3. Joining the model data set
+```{r}
+library(dplyr)
+# join store-level data onto training dataset (so we know size and type)
+train_joined = left_join(train, y= stores)
+# Join train_joined onto features dataset (so we know the rest of variables)
+train_joined = left_join(train_joined, y= features)
+```
+
+# 4. Cleaning and fixing problems with the data
+```{r}
+# recode stores type based on size
+train_joined$Type[(train_joined$`Size (sq ft)`<50000)] <- "C"
+train_joined$Type[(train_joined$`Size (sq ft)`>=50000) & (train_joined$`Size (sq ft)`<150000)] <- "B"
+train_joined$Type[(train_joined$`Size (sq ft)`>=150000)] <- "A"
+```
+
+```{r}
+# Delete promotions
+train_joined$Promotion1 <- NULL
+train_joined$Promotion2 <- NULL
+train_joined$Promotion3 <- NULL
+train_joined$Promotion4 <- NULL
+train_joined$Promotion5 <- NULL
+```
+
+```{r}
+# Remove negative values
+train_joined <- train_joined[train_joined$Weekly_Sales > 0, ]
+```
+
+```{r}
+# convert IsHoliday to numeric
+train_joined$IsHoliday <- as.numeric(train_joined$IsHoliday)
+```
+
+```{r}
+# convert date info in format 'dmy'
+train_joined$Date <- dmy(train_joined$Date)
+```
+
+# 5. Variables tranformation
+
+```{r}
+# week number of the year
+train_joined$WeekNum <- as.numeric(format(train_joined$Date+3,"%U"))
+```
+
+```{r}
+# create a unic identifier
+train_joined$Id <- as.character(paste(train_joined$Store, train_joined$Dept, sep = "-"))
+```
+
+
+```{r}
+train_joined$Date <- as.Date(train_joined$Date, "%d, %m, %Y")
+```
+
+```{r}
+# Create a varible of sales of same date last year
+train_joined$LastYearSales <- c(train_joined[train_joined$Date %in% (as.Date(ymd(train_joined$Weekly_Sales) - years(1))), ]$Weekly_Sales, NA)
+train_joined
+```
+
+```{r, include=FALSE, cache=FALSE}
+# move location of columns
+train_joined <- train_joined[c(13,2,1,6,7,3,12,5,4,14,8,9,10,11)]
+```
+
+```{r}
+# print first 6 rows of mydata
+head(train_joined)
+```
+
+
+# 6. Build the model
+
+While developing the model, iteratively analyse the variables for:
+
+1.Normality of distribution
+2.Extreme values
+3.Multiple colinearity
+4.Monoscedasticity (even distribution of residuals)
+5.p-value of coefficients and R2?F statistic of the model
+
+
+```{r}
+# select a subset of numeric variables for regression modelling
+train_joined.sel <- subset(train_joined, select = c(4,5,8,9,10,11,12,13))
+```
+
+### 6.1 Check for non linearity (visually) and transform variables
+
+```{r}
+# Plot a correlation plot
+pairs.panels(train_joined.sel, col="red")
+```
+
+```{r}
+# log transformation of Weekly sales to have a more normal distribution
+train_joined.sel$Weekly_Sales <- log10(train_joined.sel$Weekly_Sales)
+```
+
+```{r}
+# Plot a correlation plot
+pairs.panels(train_joined.sel, col="red")
+```
+
+```{r message=FALSE}
+#subset the data into train and test
+n = nrow(train_joined.sel)
+trainIndex = sample(1:n, size = round(0.8*n), replace=FALSE)
+dataT = train_joined.sel[trainIndex ,]
+dataV = train_joined.sel[-trainIndex ,]
+```
+
+### 6.2. Eliminate extreme values
+
+```{r}
+# fit the model (1)
+fit <- lm(Weekly_Sales ~ `Size (sq ft)` + Temperature + Fuel_Price + CPI + Unemployment, data= dataT)
+summary(fit) #R2 = 10.1%
+plot(fit)
+```
+
+```{r}
+crPlots(fit)
+```
+
+```{r}
+# Eliminate extreme values
+cutoff <- 4/((nrow(dataT)-length(fit$coefficients)-2)) # Cook's D plot, cutoff as 4/(n-k-1)
+plot(fit, which=4, cook.levels=cutoff)                        # identify D values > cutoff
+plot(fit, which=5, cook.levels=cutoff)
+dataT <- dataT[-which(rownames(dataT)    # Row names discovered in 2 rounds
+    %in% c("32887", "20128", "273271")),]     
+```
+
+
+```{r}
+### Refit the model (2)
+fit <- lm(Weekly_Sales ~., data= dataT)
+summary(fit) # R2=10.1%
+```
+
+The elimination of extreme values did not improved the model, so we won't carry on with this task.
+
+### 6.3. Check for multi-collinearity with Variance Inflation Factor
+
+Correlated: none VIF=1, moderately 1<VIF<5, ** highly 5<VIF<10, ...
+```{r}
+vif(fit)
+```
+
+```{r}
+# Refit the model (3) - drop x due to multiple collinearity
+fit <- lm(Weekly_Sales ~ `Size (sq ft)`, Temperature, Fuel_Price, CPI, Unemployment)
+summary(fit) # R2=87.7% but tough it was inflated, F=359.9
+vif(fit)
+```
+Carry on if there are other varibles to discard.
+
+VIF, F-ratio and p-values say it is good, so no need to do anything else.
+
+# 7. Evaluate the final linear model
+
+Find all predicted values for both the training set and the validation set
+
+```{r}
+dataT$Pred.Weekly_Sales <- predict(fit, 
+    newdata = subset(dataT, select=c(`Size (sq ft)`, Temperature, Fuel_Price, CPI, Unemployment)))
+dataV$Pred.Weekly_Sales <- predict(fit, 
+    newdata = subset(dataV, select=c(`Size (sq ft)`, Temperature, Fuel_Price, CPI, Unemployment)))
+```
+
+Check how good is the model on the training set - correlation^2, RME and MAE
+
+```{r}
+train.corr <- round(cor(dataT$Pred.Weekly_Sales, dataT$Weekly_Sales), 2)
+train.RMSE <- round(sqrt(mean((10 ^ dataT$Pred.Weekly_Sales - 10 ^ dataT$Weekly_Sales)^2)))
+train.MAE <- round(mean(abs(10 ^ dataT$Pred.Weekly_Sales - 10 ^ dataT$Weekly_Sales)))
+c(data.corr^2, data.RMSE, data.MAE)
+```
+
+###### With all prep is: 0.8836 2670.0000 1759.0000 / As above
+######Do nothing was:   0.7225 3997.0000 2676.0000 / See previous lesson
+
+######Check how good is the model on the validation set - correlation^2, RME and MAE
+
+```{r}
+# valid.corr <- round(cor(valid.sample$Pred.Price, valid.sample$Price), 2)
+# valid.RMSE <- round(sqrt(mean((10 ^ valid.sample$Pred.Price - 10 ^ valid.sample$Price)^2)))
+# valid.MAE <- round(mean(abs(10 ^ valid.sample$Pred.Price - 10 ^ valid.sample$Price)))
+# c(valid.corr^2, valid.RMSE, valid.MAE)
+```
+
+######With all prep is: 0.7396 5723.0000 3334.0000 / As above
+######Do nothing was:   0.6889 4927.0000 3208.0000 / See previous lesson
+
+# Small data set - Cross-validation should be used, but vars selection needs to be auto!
