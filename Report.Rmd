@@ -1,6 +1,6 @@
 ---
 title: 'Understanding Data and its Environment: Report assessment'
-author: "Eugeni Vidal"
+author: 'Student ID: 10313272'
 date: "March 16, 2018"
 output:
   pdf_document:
@@ -23,6 +23,7 @@ fontsize: 11pt
 geometry: margin=1in
 csl: harvard-university-of-leeds.csl
 biblio-style: apsr
+word count: '2,660'
 ---
 
 \pagebreak
@@ -262,7 +263,7 @@ data_joined$year = lubridate::year(data_joined$Date)
 
 Finally, we generate a variable of the previous year Weekly Sales. As Zoltners et al argue [-@zoltners_complete_2001, p.342] the current year sales can be a very powerful predictor of the next year's sales. 
 
-```{r, echo=TRUE, fig.cap=c("Correlation Weekly Sales ~ Weekly Sales"), fig.height=3.5, fig.width=5.5, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+```{r, echo=TRUE, message=FALSE, fig.cap=c("Correlation Weekly Sales ~ Weekly Sales"), fig.height=3.5, fig.width=5.5, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
 # Create a previous year sales dataset
 prevyear = select(data_joined, year, WeekNum, Dept, Store, 
 prev_Weekly_Sales =  Weekly_Sales) 
@@ -425,9 +426,9 @@ For the assessment of the model first, we calculate with the generic function `p
 ```{r, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
 # Find predicted values for both the training set and the validation
 data_joinedT$Pred.Weekly_Sales <- predict(fit, 
-    newdata = subset(data_joinedT, select=c(Weekly_Sales, prev_Weekly_Sales)))
+    newdata = subset(data_joinedT, select=c(Weekly_Sales,  prev_Weekly_Sales)))
 data_joinedV$Pred.Weekly_Sales <- predict(fit, 
-    newdata = subset(data_joinedV, select=c(Weekly_Sales, prev_Weekly_Sales)))
+    newdata = subset(data_joinedV, select=c(Weekly_Sales,  prev_Weekly_Sales)))
 ```
 
 Then, we measure the model's accuracy calculating the Weighted Mean Absolute Error (WMAE) with the following formula:
@@ -471,13 +472,15 @@ valid.WMAE <- round(mean(abs(data_joinedV$W)))
 c(valid.WMAE)
 ```
 
-As expected, the result is greater in the validation dataset, but only slightly bigger; and in both cases the WMAE (arround $2,500) can be considered rather low - taking into account the scale of the variable.
+In both cases the WMAE is arround $2,500, a figure that can be considered rather low - taking into account the scale of the variable.
 
 Therefore, we could conclude that we managed to build a relatively accurate model to predict sales.
 
+\pagebreak
+
 # Conclusions
 
-This report describes, preprocesses and analyzes a set of internal and external data related to the sales of a nationwide retailer from the United States, in order to construct an accurate model for sales prediction.
+This report describes, preprocesses and analyses a set of internal and external data related to the sales of a nationwide retailer from the United States, in order to construct an accurate model for sales prediction.
 
 The main conclusions reached with the interpretation of the final model are the following:
 
