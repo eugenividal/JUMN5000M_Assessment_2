@@ -1,1 +1,1 @@
-This rep contains code for the Understanding Data and its Environment: Report assessmentt.
+This report describes, preprocesses and analyzes a set of internal and external data related to the sales of a nationwide retailer from the United States, in order to construct an accurate model for sales prediction.
