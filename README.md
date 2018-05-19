@@ -1,1 +1,1 @@
-This report describes, preprocesses and analyzes a set of internal and external data related to the sales of a nationwide retailer from the United States, in order to construct an accurate model for sales prediction.
+This is the second assessment of the core module **Understanding Data and its Environment - MSc Data Analytics and Society**. The report describes, preprocesses and analyzes a set of internal and external data related to the sales of a nationwide retailer from the United States, in order to construct an accurate model for sales prediction.
