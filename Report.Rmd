@@ -3,17 +3,17 @@ title: 'Understanding Data and its Environment: Report'
 author: 'Student ID: 10313272'
 date: "March 23, 2018"
 output:
-  html_document:
-    df_print: paged
-    toc: yes
-    toc_depth: 2
-    toc_float: yes
   pdf_document:
     fig_caption: yes
     keep_tex: yes
     latex_engine: pdflatex
     number_sections: yes
     toc: yes
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: 2
+    toc_float: yes
   word_document:
     toc: yes
 bibliography: My library.bib
